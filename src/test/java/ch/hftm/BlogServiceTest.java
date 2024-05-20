@@ -1,6 +1,7 @@
 package ch.hftm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -19,7 +20,7 @@ public class BlogServiceTest {
     @Test
     void testAddingAndGettingBlogs() {
         // Arrange
-        Blog newBlog = new Blog("Test Blog", "This is a test blog");
+        Blog newBlog = new Blog("Test Blog", "This is a test blog", 1L);
         int initialSize = blogService.getBlogs().size();
 
         // Act
@@ -34,14 +35,16 @@ public class BlogServiceTest {
     @Test
     void testDeletingBlogs() {
         // Arrange
-        Blog blogToDelete = new Blog("Delete Me", "This blog should be deleted");
+        Blog blogToDelete = new Blog("Delete Me", "This blog should be deleted", 343L);
         blogService.addBlog(blogToDelete);
+        Long blogIdToDelete = blogToDelete.getID();
 
         // Act
-        blogService.deleteBlog(blogToDelete);
-        List<Blog> blogs = blogService.getBlogs();
+        blogService.deleteBlog(blogIdToDelete);
+        Blog foundBlog = blogService.getBlogById(blogIdToDelete);
 
         // Assert
-        assertTrue(!blogs.contains(blogToDelete), "The blog should be deleted");
+        assertNull(foundBlog, "The blog should be deleted");
     }
+
 }
