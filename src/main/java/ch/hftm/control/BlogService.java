@@ -1,6 +1,9 @@
-package ch.hftm;
+package ch.hftm.control;
 
 import java.util.List;
+
+import ch.hftm.entity.Blog;
+import ch.hftm.repository.BlogRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

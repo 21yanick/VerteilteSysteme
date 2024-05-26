@@ -1,5 +1,7 @@
 package ch.hftm;
 
+import ch.hftm.entity.Blog;
+import ch.hftm.repository.BlogRepository;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;

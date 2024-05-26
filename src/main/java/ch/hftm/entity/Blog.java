@@ -1,4 +1,4 @@
-package ch.hftm;
+package ch.hftm.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
