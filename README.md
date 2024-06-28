@@ -1,60 +1,79 @@
-# blog-backend
+# Blog Backend Projekt
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Überblick
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+Dies ist ein einfaches Blog-Backend-Projekt, das mit Quarkus entwickelt wurde. Es ermöglicht das Erstellen, Abrufen, Aktualisieren und Löschen von Blog-Einträgen. Das Projekt demonstriert die Verwendung von Quarkus für die Entwicklung einer RESTful API mit Dependency Injection, Datenpersistenz und Transaktionsmanagement.
 
-## Running the application in dev mode
+## Projektstruktur
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-./mvnw compile quarkus:dev
-```
+- **`pom.xml`**: Definiert die Abhängigkeiten und Konfigurationen für das Projekt.
+- **`src/main/java`**: Enthält den Quellcode der Anwendung.
+- **`src/test/java`**: Enthält die Testfälle.
+- **`target`**: Enthält die kompilierten Dateien und Artefakte.
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+## Hauptkomponenten
 
-## Packaging and running the application
+### BlogResource (REST-Endpunkte)
+Definiert die REST-Endpunkte für das Blog-System.
 
-The application can be packaged using:
-```shell script
-./mvnw package
-```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+- **GET /blogs**: Ruft alle Blogs ab.
+- **POST /blogs**: Erstellt einen neuen Blog.
+- **PUT /blogs/{id}**: Aktualisiert einen bestehenden Blog.
+- **DELETE /blogs/{id}**: Löscht einen bestehenden Blog.
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+### BlogService (Geschäftslogik)
+Enthält die Geschäftslogik für das Blog-System.
 
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
-```
+- **getBlogs()**: Ruft alle Blogs ab.
+- **addBlog(Blog blog)**: Fügt einen neuen Blog hinzu.
+- **deleteBlog(Long blogId)**: Löscht einen Blog anhand der ID.
+- **updateBlog(Blog blog)**: Aktualisiert einen bestehenden Blog.
+- **getBlogById(Long id)**: Ruft einen Blog anhand der ID ab.
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+### BlogRepository (Datenhaltung)
+Verwaltet die Datenhaltung der Blog-Einträge.
 
-## Creating a native executable
+- **getBlogs()**: Gibt alle Blogs zurück.
+- **addBlog(Blog blog)**: Fügt einen neuen Blog zur Liste hinzu.
+- **deleteBlog(Blog blog)**: Entfernt einen Blog aus der Liste.
 
-You can create a native executable using: 
-```shell script
-./mvnw package -Dnative
-```
+### Blog (Entitätsklasse)
+Repräsentiert das Blog-Datenmodell.
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+- **Felder**:
+  - `id`: Primärschlüssel, automatisch generiert.
+  - `title`: Titel des Blogs.
+  - `content`: Inhalt des Blogs.
+  - `comments`: Liste der Kommentare zu diesem Blog.
+  - `likes`: Liste der Likes zu diesem Blog.
 
-You can then execute your native executable with: `./target/blog-backend-1.0.0-runner`
+- **Methoden**:
+  - `addComment(Comment comment)`: Fügt einen Kommentar hinzu und setzt die Beziehung zum Blog.
+  - `removeComment(Comment comment)`: Entfernt einen Kommentar und setzt die Beziehung zum Blog auf `null`.
+  - `addLike(BlogLike like)`: Fügt ein Like hinzu und setzt die Beziehung zum Blog.
+  - `removeLike(BlogLike like)`: Entfernt ein Like und setzt die Beziehung zum Blog auf `null`.
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
+## Installation und Ausführung
 
-## Related Guides
+1. **Voraussetzungen**:
+   - Java 17
+   - Maven
 
-- REST JSON-B ([guide](https://quarkus.io/guides/rest#json-serialisation)): JSON-B serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
+2. **Projekt klonen**:
+   ```sh
+   git clone <repository-url>
+   cd blog-backend
 
-## Provided Code
+3. **Projekt starten**:
+   ```sh
+    ./mvnw quarkus:dev
 
-### REST
+### Zugriff auf die Anwendung**:
 
-Easily start your REST Web Services
+API-Endpunkte: http://localhost:8080/blogs
+Quarkus Dev UI: http://localhost:8080/q/dev/
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+## Tests
+Tests befinden sich im Verzeichnis src/test/java. Um die Tests auszuführen, verwende den folgenden Befehl:
+   ```sh
+    ./mvnw test

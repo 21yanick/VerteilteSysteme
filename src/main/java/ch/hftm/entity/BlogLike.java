@@ -8,7 +8,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 
 @Entity
-public class Like {
+public class BlogLike {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -16,7 +16,7 @@ public class Like {
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    public Like() {
+    public BlogLike() {
     }
 
     public Long getId() {

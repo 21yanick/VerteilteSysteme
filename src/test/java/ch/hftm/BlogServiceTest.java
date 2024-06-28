@@ -22,7 +22,7 @@ public class BlogServiceTest {
     @Test
     void testAddingAndGettingBlogs() {
         // Arrange
-        Blog newBlog = new Blog("Test Blog", "This is a test blog", 1L);
+        Blog newBlog = new Blog("Test Blog", "This is a test blog");
         int initialSize = blogService.getBlogs().size();
 
         // Act
@@ -37,9 +37,9 @@ public class BlogServiceTest {
     @Test
     void testDeletingBlogs() {
         // Arrange
-        Blog blogToDelete = new Blog("Delete Me", "This blog should be deleted", 343L);
+        Blog blogToDelete = new Blog("Delete Me", "This blog should be deleted");
         blogService.addBlog(blogToDelete);
-        Long blogIdToDelete = blogToDelete.getID();
+        Long blogIdToDelete = blogToDelete.getId();
 
         // Act
         blogService.deleteBlog(blogIdToDelete);

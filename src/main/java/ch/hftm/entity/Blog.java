@@ -20,15 +20,14 @@ public class Blog {
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Like> likes = new ArrayList<>();
+    private List<BlogLike> likes = new ArrayList<>();
 
     public Blog() {
     }
 
-    public Blog(String title, String content, Long id) {
+    public Blog(String title, String content) {
         this.title = title;
         this.content = content;
-        this.id = id;
     }
 
     public Long getId() {
@@ -69,16 +68,16 @@ public class Blog {
         comment.setBlog(null);
     }
 
-    public List<Like> getLikes() {
+    public List<BlogLike> getLikes() {
         return likes;
     }
 
-    public void addLike(Like like) {
+    public void addLike(BlogLike like) {
         likes.add(like);
         like.setBlog(this);
     }
 
-    public void removeLike(Like like) {
+    public void removeLike(BlogLike like) {
         likes.remove(like);
         like.setBlog(null);
     }

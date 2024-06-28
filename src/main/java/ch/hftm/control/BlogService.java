@@ -24,7 +24,7 @@ public class BlogService {
 
     @Transactional
     public void addBlog(Blog blog) {
-        Log.info("Adding blog with ID: " + blog.getID());
+        Log.info("Adding blog with ID: " + blog.getId());
         blogRepository.persist(blog);
     }
 
@@ -41,11 +41,11 @@ public class BlogService {
 
     @Transactional
     public void updateBlog(Blog blog) {
-        if (blog.getID() != null && blogRepository.findById(blog.getID()) != null) {
+        if (blog.getId() != null && blogRepository.findById(blog.getId()) != null) {
             blogRepository.getEntityManager().merge(blog);
             Log.info("Updated blog: " + blog.getTitle());
         } else {
-            Log.warn("Blog not found with ID: " + blog.getID());
+            Log.warn("Blog not found with ID: " + blog.getId());
         }
     }
 
