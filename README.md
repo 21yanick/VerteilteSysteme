@@ -2,7 +2,7 @@
 
 ## Überblick
 
-Dies ist ein einfaches Blog-Backend-Projekt, das mit Quarkus entwickelt wurde. Es ermöglicht das Erstellen, Abrufen, Aktualisieren und Löschen von Blog-Einträgen. Das Projekt demonstriert die Verwendung von Quarkus für die Entwicklung einer RESTful API mit Dependency Injection, Datenpersistenz und Transaktionsmanagement.
+Dies ist ein einfaches Blog-Backend-Projekt, das mit Quarkus entwickelt wurde. Es ermöglicht das Erstellen, Abrufen, Aktualisieren und Löschen von Blog-Einträgen sowie das Hinzufügen von Kommentaren und das Filtern von Blog-Beiträgen nach Titel. Das Projekt demonstriert die Verwendung von Quarkus für die Entwicklung einer RESTful API mit Dependency Injection, Datenpersistenz und Transaktionsmanagement.
 
 ## Projektstruktur
 
@@ -16,19 +16,22 @@ Dies ist ein einfaches Blog-Backend-Projekt, das mit Quarkus entwickelt wurde. E
 ### BlogResource (REST-Endpunkte)
 Definiert die REST-Endpunkte für das Blog-System.
 
-- **GET /blogs**: Ruft alle Blogs ab.
+- **GET /blogs**: Ruft alle Blogs ab oder filtert nach Titel, wenn ein Query-Parameter `title` angegeben ist.
 - **POST /blogs**: Erstellt einen neuen Blog.
 - **PUT /blogs/{id}**: Aktualisiert einen bestehenden Blog.
 - **DELETE /blogs/{id}**: Löscht einen bestehenden Blog.
+- **POST /blogs/{id}/comments**: Fügt einen Kommentar zu einem bestehenden Blog hinzu.
 
 ### BlogService (Geschäftslogik)
 Enthält die Geschäftslogik für das Blog-System.
 
 - **getBlogs()**: Ruft alle Blogs ab.
+- **getBlogsByTitle(String title)**: Filtert Blogs nach Titel.
 - **addBlog(Blog blog)**: Fügt einen neuen Blog hinzu.
 - **deleteBlog(Long blogId)**: Löscht einen Blog anhand der ID.
 - **updateBlog(Blog blog)**: Aktualisiert einen bestehenden Blog.
 - **getBlogById(Long id)**: Ruft einen Blog anhand der ID ab.
+- **addCommentToBlog(Long blogId, Comment comment)**: Fügt einen Kommentar zu einem bestehenden Blog hinzu.
 
 ### BlogRepository (Datenhaltung)
 Verwaltet die Datenhaltung der Blog-Einträge.
@@ -36,14 +39,15 @@ Verwaltet die Datenhaltung der Blog-Einträge.
 - **getBlogs()**: Gibt alle Blogs zurück.
 - **addBlog(Blog blog)**: Fügt einen neuen Blog zur Liste hinzu.
 - **deleteBlog(Blog blog)**: Entfernt einen Blog aus der Liste.
+- **find(String title)**: Findet Blogs basierend auf einem Titel.
 
 ### Blog (Entitätsklasse)
 Repräsentiert das Blog-Datenmodell.
 
 - **Felder**:
   - `id`: Primärschlüssel, automatisch generiert.
-  - `title`: Titel des Blogs.
-  - `content`: Inhalt des Blogs.
+  - `title`: Titel des Blogs (Validierung: darf nicht null sein, muss zwischen 3 und 100 Zeichen lang sein).
+  - `content`: Inhalt des Blogs (Validierung: darf nicht null sein, muss mindestens 10 Zeichen lang sein).
   - `comments`: Liste der Kommentare zu diesem Blog.
   - `likes`: Liste der Likes zu diesem Blog.
 
@@ -60,7 +64,7 @@ Eine vollständige, automatisch generierte API-Dokumentation ist über die Swagg
 - **Swagger UI**: [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui)
 - **OpenAPI-Spezifikation**: [http://localhost:8080/openapi](http://localhost:8080/openapi)
 
-Die OpenAPI-Dokumentation enthält detaillierte Informationen zu allen verfügbaren Endpunkten, einschließlich ihrer Parameter, möglichen Antworten und Beispielanfragen.
+Die OpenAPI-Dokumentation enthält detaillierte Informationen zu allen verfügbaren Endpunkten, einschliesslich ihrer Parameter, möglichen Antworten und Beispielanfragen.
 
 ## Installation und Ausführung
 
