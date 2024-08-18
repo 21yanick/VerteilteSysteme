@@ -8,12 +8,21 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Blog {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotNull(message = "Titel kann nicht null sein")
+    @Size(min = 3, max = 100, message = "Titel muss zwischen 3 und 100 Zeichen haben")
     private String title;
+
+
+    @NotNull(message = "Content cannot be null")
+    @Size(min = 10, message = "Content must be at least 10 characters long")
     private String content;
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)

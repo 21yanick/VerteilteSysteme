@@ -53,6 +53,15 @@ Repräsentiert das Blog-Datenmodell.
   - `addLike(BlogLike like)`: Fügt ein Like hinzu und setzt die Beziehung zum Blog.
   - `removeLike(BlogLike like)`: Entfernt ein Like und setzt die Beziehung zum Blog auf `null`.
 
+## API-Dokumentation
+
+Eine vollständige, automatisch generierte API-Dokumentation ist über die Swagger UI verfügbar.
+
+- **Swagger UI**: [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui)
+- **OpenAPI-Spezifikation**: [http://localhost:8080/openapi](http://localhost:8080/openapi)
+
+Die OpenAPI-Dokumentation enthält detaillierte Informationen zu allen verfügbaren Endpunkten, einschließlich ihrer Parameter, möglichen Antworten und Beispielanfragen.
+
 ## Installation und Ausführung
 
 1. **Voraussetzungen**:

@@ -3,10 +3,13 @@ package ch.hftm.control;
 import java.util.List;
 
 import ch.hftm.entity.Blog;
+import ch.hftm.entity.Comment;
 import ch.hftm.repository.BlogRepository;
+import ch.hftm.repository.CommentRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 
@@ -15,6 +18,9 @@ public class BlogService {
 
     @Inject
     private BlogRepository blogRepository;
+
+    @Inject
+    private CommentRepository commentRepository;
 
     public List<Blog> getBlogs() {
         List<Blog> blogs = blogRepository.listAll(Sort.by("title"));
@@ -52,4 +58,21 @@ public class BlogService {
     public Blog getBlogById(Long id) {
         return blogRepository.findById(id);
     }
+
+    public List<Blog> getBlogsByTitle(String title) {
+        return blogRepository.find("title like ?1", "%" + title + "%").list();
+    }
+    
+    @Transactional
+    public void addCommentToBlog(Long blogId, Comment comment) {
+        Blog blog = blogRepository.findById(blogId);
+        if (blog != null) {
+            comment.setBlog(blog);  // Setzt die Beziehung zwischen Kommentar und Blog
+            commentRepository.persist(comment);
+        } else {
+            throw new WebApplicationException("Blog not found", 404);
+        }
+    }
+
+
 }
