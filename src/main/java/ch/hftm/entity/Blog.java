@@ -17,12 +17,12 @@ public class Blog {
     private Long id;
 
     @NotNull(message = "Titel kann nicht null sein")
-    @Size(min = 3, max = 100, message = "Titel muss zwischen 3 und 100 Zeichen haben")
+    @Size(min = 2, max = 100, message = "Titel muss zwischen 2 und 100 Zeichen haben")
     private String title;
 
 
-    @NotNull(message = "Content cannot be null")
-    @Size(min = 10, message = "Content must be at least 10 characters long")
+    @NotNull(message = "Content kann nicht null sein")
+    @Size(min = 10, message = "Content muss mindestens 10 Zeichen lang sein")
     private String content;
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)

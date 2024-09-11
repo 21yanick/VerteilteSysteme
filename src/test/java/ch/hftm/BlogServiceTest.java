@@ -24,15 +24,20 @@ public class BlogServiceTest {
         // Arrange
         Blog newBlog = new Blog("Test Blog", "This is a test blog");
         int initialSize = blogService.getBlogs().size();
-
+    
         // Act
         blogService.addBlog(newBlog);
         List<Blog> blogs = blogService.getBlogs();
-
+    
         // Assert
+        Blog addedBlog = blogs.stream()
+                              .filter(blog -> blog.getTitle().equals("Test Blog"))
+                              .findFirst()
+                              .orElse(null);
+    
         assertEquals(initialSize + 1, blogs.size(), "Blog should be added");
-        assertTrue(blogs.contains(newBlog), "The new blog should be in the list");
-    }
+        assertTrue(addedBlog != null, "The new blog should be in the list");
+    }    
 
     @Test
     void testDeletingBlogs() {
@@ -49,4 +54,20 @@ public class BlogServiceTest {
         assertNull(foundBlog, "The blog should be deleted");
     }
 
+    @Test
+    void testPagination() {
+        // Arrange
+        Blog blog1 = new Blog("Blog 1", "Content 1");
+        Blog blog2 = new Blog("Blog 2", "Content 2");
+        blogService.addBlog(blog1);
+        blogService.addBlog(blog2);
+
+        // Act
+        List<Blog> firstPage = blogService.getBlogsPaginated(0, 1);
+        List<Blog> secondPage = blogService.getBlogsPaginated(1, 1);
+
+        // Assert
+        assertEquals(1, firstPage.size(), "First page should return one blog");
+        assertEquals(1, secondPage.size(), "Second page should return one blog");
+    }
 }

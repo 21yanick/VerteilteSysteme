@@ -8,6 +8,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.json.bind.annotation.JsonbTransient;
 
 @Entity
 public class Comment {
@@ -15,12 +16,13 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Comment text cannot be null")
-    @Size(min = 3, max = 500, message = "Comment text must be between 3 and 500 characters")
+    @NotNull(message = "Kommentar darf nicht leer sein")
+    @Size(min = 3, max = 500, message = "Kommentar muss zwischen 3 und 500 Zeichen lang sein")
     private String text;
 
     @ManyToOne
     @JoinColumn(name = "blog_id")
+    @JsonbTransient
     private Blog blog;
 
     public Comment() {

@@ -7,8 +7,11 @@ import ch.hftm.entity.Blog;
 import ch.hftm.entity.Comment;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.validation.Valid;
 
 @Path("/blogs")
@@ -20,20 +23,25 @@ public class BlogResource {
     BlogService blogService;
 
     @GET
-    public Response getAllBlogs(@QueryParam("title") String title) {
+    public Response getAllBlogs(@QueryParam("title") String title, 
+                                @QueryParam("page") @DefaultValue("0") int page, 
+                                @QueryParam("size") @DefaultValue("10") int size) {
         List<Blog> blogs;
         if (title != null && !title.isEmpty()) {
-            blogs = blogService.getBlogsByTitle(title);
+            blogs = blogService.getBlogsByTitlePaginated(title, page, size);
         } else {
-            blogs = blogService.getBlogs();
+            blogs = blogService.getBlogsPaginated(page, size);
         }
         return Response.ok(blogs).build();
-    }      
+    }     
 
     @POST
-    public Response createBlog(@Valid Blog blog) {
+    public Response createBlog(@Valid Blog blog, @Context UriInfo uriInfo) {
         blogService.addBlog(blog);
-        return Response.status(Response.Status.CREATED).entity(blog).build();
+        // Location-Header
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        uriBuilder.path(Long.toString(blog.getId()));
+        return Response.created(uriBuilder.build()).entity(blog).build();
     }
     
     @PUT
@@ -43,6 +51,23 @@ public class BlogResource {
         if (existingBlog != null) {
             existingBlog.setTitle(updatedBlog.getTitle());
             existingBlog.setContent(updatedBlog.getContent());
+            blogService.updateBlog(existingBlog);
+            return Response.ok(existingBlog).build();
+        }
+        return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    @PATCH
+    @Path("/{id}")
+    public Response patchBlog(@PathParam("id") Long id, Blog patchBlog) {
+        Blog existingBlog = blogService.getBlogById(id);
+        if (existingBlog != null) {
+            if (patchBlog.getTitle() != null) {
+                existingBlog.setTitle(patchBlog.getTitle());
+            }
+            if (patchBlog.getContent() != null) {
+                existingBlog.setContent(patchBlog.getContent());
+            }
             blogService.updateBlog(existingBlog);
             return Response.ok(existingBlog).build();
         }
