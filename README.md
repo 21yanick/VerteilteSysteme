@@ -2,91 +2,97 @@
 
 ## Überblick
 
-Dies ist ein einfaches Blog-Backend-Projekt, das mit Quarkus entwickelt wurde. Es ermöglicht das Erstellen, Abrufen, Aktualisieren und Löschen von Blog-Einträgen sowie das Hinzufügen von Kommentaren und das Filtern von Blog-Beiträgen nach Titel. Das Projekt demonstriert die Verwendung von Quarkus für die Entwicklung einer RESTful API mit Dependency Injection, Datenpersistenz und Transaktionsmanagement.
+Dieses Projekt implementiert ein Blog-Backend, das mit Quarkus entwickelt wurde. Es ermöglicht das Verwalten von Blog-Beiträgen, einschliesslich der Erstellung, Abruf, Aktualisierung und Löschung von Blogs. Darüber hinaus können Benutzer Kommentare und Likes hinzufügen, was die Interaktion mit Blogposts fördert. Das Backend bietet eine RESTful API, die auf eine einfache und skalierbare Architektur setzt.
+
+## Features
+
+- **Blog-Verwaltung**: Erstellen, Abrufen, Aktualisieren und Löschen von Blog-Beiträgen.
+- **Kommentar-Verwaltung**: Kommentare zu Blog-Beiträgen hinzufügen.
+- **Likes-Verwaltung**: Benutzer können Blog-Beiträge liken und unliken.
+- **Filterung**: Blog-Beiträge nach Titel filtern.
 
 ## Projektstruktur
 
-- **`pom.xml`**: Definiert die Abhängigkeiten und Konfigurationen für das Projekt.
-- **`src/main/java`**: Enthält den Quellcode der Anwendung.
-- **`src/test/java`**: Enthält die Testfälle.
-- **`target`**: Enthält die kompilierten Dateien und Artefakte.
+- **`pom.xml`**: Maven-Projektdatei, die Abhängigkeiten und Build-Konfiguration definiert.
+- **`src/main/java`**: Enthält die Hauptlogik der Anwendung.
+- **`src/test/java`**: Enthält die Testfälle für die Kernlogik.
+- **`target`**: Build-Ordner, der die kompilierten Artefakte enthält.
 
 ## Hauptkomponenten
 
 ### BlogResource (REST-Endpunkte)
-Definiert die REST-Endpunkte für das Blog-System.
+Die REST-Endpunkte für die Verwaltung der Blogs und Interaktionen:
 
-- **GET /blogs**: Ruft alle Blogs ab oder filtert nach Titel, wenn ein Query-Parameter `title` angegeben ist.
-- **POST /blogs**: Erstellt einen neuen Blog.
-- **PUT /blogs/{id}**: Aktualisiert einen bestehenden Blog.
-- **DELETE /blogs/{id}**: Löscht einen bestehenden Blog.
-- **POST /blogs/{id}/comments**: Fügt einen Kommentar zu einem bestehenden Blog hinzu.
+- **GET /blogs**: Abrufen aller Blogs oder Filtern nach Titel.
+- **POST /blogs**: Erstellen eines neuen Blogs.
+- **PUT /blogs/{id}**: Aktualisieren eines bestehenden Blogs.
+- **DELETE /blogs/{id}**: Löschen eines Blogs.
+- **POST /blogs/{id}/comments**: Kommentar zu einem Blog hinzufügen.
+- **POST /blogs/{id}/likes**: Like zu einem Blog hinzufügen.
+- **DELETE /likes/{id}**: Like von einem Blog entfernen.
 
 ### BlogService (Geschäftslogik)
-Enthält die Geschäftslogik für das Blog-System.
+Die Geschäftslogik, die die Interaktionen mit den Blogdaten verarbeitet:
 
-- **getBlogs()**: Ruft alle Blogs ab.
-- **getBlogsByTitle(String title)**: Filtert Blogs nach Titel.
-- **addBlog(Blog blog)**: Fügt einen neuen Blog hinzu.
-- **deleteBlog(Long blogId)**: Löscht einen Blog anhand der ID.
-- **updateBlog(Blog blog)**: Aktualisiert einen bestehenden Blog.
-- **getBlogById(Long id)**: Ruft einen Blog anhand der ID ab.
-- **addCommentToBlog(Long blogId, Comment comment)**: Fügt einen Kommentar zu einem bestehenden Blog hinzu.
-
-### BlogRepository (Datenhaltung)
-Verwaltet die Datenhaltung der Blog-Einträge.
-
-- **getBlogs()**: Gibt alle Blogs zurück.
-- **addBlog(Blog blog)**: Fügt einen neuen Blog zur Liste hinzu.
-- **deleteBlog(Blog blog)**: Entfernt einen Blog aus der Liste.
-- **find(String title)**: Findet Blogs basierend auf einem Titel.
+- **getBlogs()**: Abrufen aller Blogs.
+- **addBlog(Blog blog)**: Hinzufügen eines neuen Blogs.
+- **deleteBlog(Long blogId)**: Löschen eines Blogs.
+- **updateBlog(Blog blog)**: Aktualisieren eines bestehenden Blogs.
+- **addCommentToBlog(Long blogId, Comment comment)**: Hinzufügen eines Kommentars zu einem Blog.
+- **addLikeToBlog(Long blogId, BlogLike like)**: Hinzufügen eines Likes zu einem Blog.
+- **removeLikeFromBlog(Long likeId)**: Entfernen eines Likes.
 
 ### Blog (Entitätsklasse)
-Repräsentiert das Blog-Datenmodell.
+Das Blog-Datenmodell, das in der Datenbank gespeichert wird:
 
-- **Felder**:
-  - `id`: Primärschlüssel, automatisch generiert.
-  - `title`: Titel des Blogs (Validierung: darf nicht null sein, muss zwischen 3 und 100 Zeichen lang sein).
-  - `content`: Inhalt des Blogs (Validierung: darf nicht null sein, muss mindestens 10 Zeichen lang sein).
-  - `comments`: Liste der Kommentare zu diesem Blog.
-  - `likes`: Liste der Likes zu diesem Blog.
+- **id**: Eindeutiger Bezeichner des Blogs.
+- **title**: Titel des Blogs.
+- **content**: Inhalt des Blogs.
+- **comments**: Liste der Kommentare zu einem Blog.
+- **likes**: Liste der Likes zu einem Blog.
 
-- **Methoden**:
-  - `addComment(Comment comment)`: Fügt einen Kommentar hinzu und setzt die Beziehung zum Blog.
-  - `removeComment(Comment comment)`: Entfernt einen Kommentar und setzt die Beziehung zum Blog auf `null`.
-  - `addLike(BlogLike like)`: Fügt ein Like hinzu und setzt die Beziehung zum Blog.
-  - `removeLike(BlogLike like)`: Entfernt ein Like und setzt die Beziehung zum Blog auf `null`.
+### BlogLike (Entitätsklasse)
+Das Like-Datenmodell, das einen Like für einen Blog-Eintrag darstellt:
+
+- **id**: Eindeutiger Bezeichner des Likes.
+- **user**: Benutzer, der den Blog-Eintrag geliked hat.
 
 ## API-Dokumentation
 
-Eine vollständige, automatisch generierte API-Dokumentation ist über die Swagger UI verfügbar.
+Die vollständige API-Dokumentation ist über Swagger UI erreichbar:
 
 - **Swagger UI**: [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui)
-- **OpenAPI-Spezifikation**: [http://localhost:8080/openapi](http://localhost:8080/openapi)
+- **OpenAPI-Dokumentation**: [http://localhost:8080/openapi](http://localhost:8080/openapi)
 
-Die OpenAPI-Dokumentation enthält detaillierte Informationen zu allen verfügbaren Endpunkten, einschliesslich ihrer Parameter, möglichen Antworten und Beispielanfragen.
+Beispiele für Anfragen:
+```bash
+# Abrufen aller Blogs
+curl -X GET "http://localhost:8080/blogs" -H "accept: application/json"
+
+# Hinzufügen eines Kommentars zu einem Blog
+curl -X POST "http://localhost:8080/blogs/1/comments" -H "Content-Type: application/json" -d '{"text":"Grossartiger Beitrag!"}'
+```
 
 ## Installation und Ausführung
 
-1. **Voraussetzungen**:
-   - Java 17
-   - Maven
+### Voraussetzungen
+- Java 17
+- Maven
 
-2. **Projekt klonen**:
-   ```sh
-   git clone <repository-url>
-   cd blog-backend
+### Projekt klonen und starten
+```sh
+git clone <repository-url>
+cd blog-backend
+./mvnw quarkus:dev
+```
 
-3. **Projekt starten**:
-   ```sh
-    ./mvnw quarkus:dev
-
-### Zugriff auf die Anwendung**:
-
-API-Endpunkte: http://localhost:8080/blogs
-Quarkus Dev UI: http://localhost:8080/q/dev/
+### Zugriff auf die Anwendung
+- **API-Endpunkte**: [http://localhost:8080/blogs](http://localhost:8080/blogs)
+- **Quarkus Dev UI**: [http://localhost:8080/q/dev/](http://localhost:8080/q/dev/)
 
 ## Tests
-Tests befinden sich im Verzeichnis src/test/java. Um die Tests auszuführen, verwende den folgenden Befehl:
-   ```sh
-    ./mvnw test
+
+Führe die Tests mit folgendem Befehl aus:
+```sh
+./mvnw test
+```
