@@ -5,17 +5,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class BlogLike {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "blog_id")
-    private Blog blog;
+    @NotNull(message = "User kann nicht null sein")
+    private String user;
 
+    @ManyToOne
+    private Blog blog;
+    
     public BlogLike() {
     }
 
@@ -25,6 +29,14 @@ public class BlogLike {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     public Blog getBlog() {

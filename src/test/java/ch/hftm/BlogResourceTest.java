@@ -3,8 +3,9 @@ package ch.hftm;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
-import ch.hftm.entity.Blog;
-import ch.hftm.entity.Comment;
+import ch.hftm.dto.BlogDTO;
+import ch.hftm.dto.CommentDTO;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
@@ -14,35 +15,46 @@ public class BlogResourceTest {
     @Test
     public void testAddComment() {
         // Blog-Eintrag erstellen
-        Blog blog = new Blog("Test Blog", "Dies ist ein Blog für Kommentare");
+        BlogDTO blogDTO = new BlogDTO();
+        blogDTO.setTitle("Test Blog");
+        blogDTO.setContent("Dies ist ein Blog für Kommentare");
+
         Integer blogId = given()
             .contentType("application/json")
-            .body(blog)
+            .body(blogDTO)
             .when()
             .post("/blogs")
             .then()
             .statusCode(201)
             .extract().path("id");
         
-        // Neuer Kommentar
-        Comment comment = new Comment("Dies ist ein Testkommentar");
+        // Kommentar hinzufügen
+        CommentDTO commentDTO = new CommentDTO();
+        commentDTO.setText("Dies ist ein Testkommentar");
     
         given()
             .contentType("application/json")
-            .body(comment)
+            .body(commentDTO)
             .when()
             .post("/blogs/" + blogId + "/comments")
             .then()
             .statusCode(201);
     }
-      
 
     @Test
     public void testPagination() {
         // Mindestens 3 Blogs existieren
-        Blog blog1 = new Blog("Blog 1", "Content 1");
-        Blog blog2 = new Blog("Blog 2", "Content 2");
-        Blog blog3 = new Blog("Blog 3", "Content 3");
+        BlogDTO blog1 = new BlogDTO();
+        blog1.setTitle("Blog 1");
+        blog1.setContent("Content 1");
+
+        BlogDTO blog2 = new BlogDTO();
+        blog2.setTitle("Blog 2");
+        blog2.setContent("Content 2");
+
+        BlogDTO blog3 = new BlogDTO();
+        blog3.setTitle("Blog 3");
+        blog3.setContent("Content 3");
     
         given().contentType("application/json").body(blog1).post("/blogs").then().statusCode(201);
         given().contentType("application/json").body(blog2).post("/blogs").then().statusCode(201);
@@ -56,9 +68,8 @@ public class BlogResourceTest {
             .get("/blogs")
             .then()
             .statusCode(200)
-            .body("$.size()", is(2));  // Nur 2 Blogs
+            .body("$.size()", is(2));  // Es sollten nur 2 Blogs zurückgegeben werden
     }
-    
 
     @Test
     public void testGetAllBlogs() {
@@ -70,7 +81,9 @@ public class BlogResourceTest {
 
     @Test
     public void testCreateBlog() {
-        Blog newBlog = new Blog("Test Blog", "This is a test content");
+        BlogDTO newBlog = new BlogDTO();
+        newBlog.setTitle("Test Blog");
+        newBlog.setContent("This is a test content");
 
         given()
             .contentType("application/json")
@@ -83,7 +96,9 @@ public class BlogResourceTest {
 
     @Test
     public void testUpdateBlog() {
-        Blog updatedBlog = new Blog("Updated Blog", "Updated Content");
+        BlogDTO updatedBlog = new BlogDTO();
+        updatedBlog.setTitle("Updated Blog");
+        updatedBlog.setContent("Updated Content");
 
         given()
             .contentType("application/json")
@@ -96,11 +111,47 @@ public class BlogResourceTest {
 
     @Test
     public void testDeleteBlog() {
+        BlogDTO newBlog = new BlogDTO();
+        newBlog.setTitle("Test Blog");
+        newBlog.setContent("This is a test content");
+    
+        Integer blogId = given()
+            .contentType("application/json")
+            .body(newBlog)
+            .when()
+            .post("/blogs")
+            .then()
+            .statusCode(201)
+            .extract().path("id");
+    
         given()
             .when()
-            .delete("/blogs/1")
+            .delete("/blogs/" + blogId)
             .then()
             .statusCode(204);
-    }
+    }  
 
+    @Test
+    public void testBlogDTOResponse() {
+        BlogDTO newBlog = new BlogDTO();
+        newBlog.setTitle("Test Blog");
+        newBlog.setContent("This is a test content");
+    
+        Integer blogId = given()
+            .contentType("application/json")
+            .body(newBlog)
+            .when()
+            .post("/blogs")
+            .then()
+            .statusCode(201)
+            .extract().path("id");
+    
+        given()
+            .when().get("/blogs/" + blogId)
+            .then()
+            .statusCode(200)
+            .body("id", is(blogId))
+            .body("title", is("Test Blog"))
+            .body("content", is("This is a test content"));
+    }    
 }

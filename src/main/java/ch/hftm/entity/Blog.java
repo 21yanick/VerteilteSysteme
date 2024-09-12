@@ -67,6 +67,11 @@ public class Blog {
         return comments;
     }
 
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+        comments.forEach(comment -> comment.setBlog(this));
+    }
+
     public void addComment(Comment comment) {
         comments.add(comment);
         comment.setBlog(this);
@@ -79,6 +84,11 @@ public class Blog {
 
     public List<BlogLike> getLikes() {
         return likes;
+    }
+
+    public void setLikes(List<BlogLike> likes) {
+        this.likes = likes;
+        likes.forEach(like -> like.setBlog(this));
     }
 
     public void addLike(BlogLike like) {
