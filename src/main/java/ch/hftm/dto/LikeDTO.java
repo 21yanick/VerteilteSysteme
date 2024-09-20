@@ -7,7 +7,7 @@ public class LikeDTO {
     private Long id;
 
     @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "Der Benutzer, der den Blog geliked hat", example = "Benutzer123")
-    private String user;
+    private String username;
 
     public Long getId() {
         return id;
@@ -17,11 +17,11 @@ public class LikeDTO {
         this.id = id;
     }
 
-    public String getUser() {
-        return user;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

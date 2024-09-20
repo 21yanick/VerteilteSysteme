@@ -15,14 +15,12 @@ public class BlogLike {
     private Long id;
 
     @NotNull(message = "User kann nicht null sein")
-    private String user;
+    private String username;
 
     @ManyToOne
     private Blog blog;
-    
-    public BlogLike() {
-    }
 
+    // Getter und Setter
     public Long getId() {
         return id;
     }
@@ -31,12 +29,12 @@ public class BlogLike {
         this.id = id;
     }
 
-    public String getUser() {
-        return user;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setUsername(String username) { 
+        this.username = username;
     }
 
     public Blog getBlog() {

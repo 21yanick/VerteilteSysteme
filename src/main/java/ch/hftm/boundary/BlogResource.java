@@ -10,6 +10,7 @@ import ch.hftm.dto.LikeDTO;
 import ch.hftm.entity.Blog;
 import ch.hftm.entity.Comment;
 import ch.hftm.entity.BlogLike;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -35,6 +36,7 @@ public class BlogResource {
 
     @GET
     @Path("/{id}")
+    @RolesAllowed({"user", "editor", "admin"})  // Alle Benutzerrollen dürfen Blogs lesen
     @Operation(summary = "Hole einen Blog anhand der ID", description = "Gibt einen Blogeintrag anhand seiner ID zurück")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Blog gefunden"),
@@ -42,15 +44,12 @@ public class BlogResource {
     })
     public Response getBlogById(@PathParam("id") Long id) {
         Blog blog = blogService.getBlogById(id);
-        if (blog != null) {
-            BlogDTO blogDTO = blogService.mapToBlogDTO(blog);
-            return Response.ok(blogDTO).build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
+        BlogDTO blogDTO = blogService.mapToBlogDTO(blog);
+        return Response.ok(blogDTO).build();
     }
 
     @GET
+    @RolesAllowed({"user", "editor", "admin"})  // Alle Benutzerrollen dürfen Blogs auflisten
     @Operation(summary = "Hole alle Blogs mit optionaler Paginierung und Titel-Filter", 
                description = "Gibt eine Liste von Blogs zurück, optional gefiltert nach Titel und mit Paginierung")
     @APIResponses({
@@ -75,6 +74,7 @@ public class BlogResource {
     }
 
     @POST
+    @RolesAllowed({"editor", "admin"})  // Nur "editor" und "admin" dürfen Blogs erstellen
     @Operation(summary = "Erstelle einen neuen Blog", description = "Erstellt einen neuen Blogeintrag und gibt dessen Standort zurück")
     @APIResponses({
         @APIResponse(responseCode = "201", description = "Blog erstellt"),
@@ -86,9 +86,10 @@ public class BlogResource {
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(Long.toString(blog.getId()));
         return Response.created(uriBuilder.build()).entity(blogService.mapToBlogDTO(blog)).build();
     }
-    
+
     @PUT
     @Path("/{id}")
+    @RolesAllowed({"editor", "admin"})  // Nur "editor" und "admin" dürfen Blogs aktualisieren
     @Operation(summary = "Aktualisiere einen bestehenden Blog", description = "Aktualisiert einen Blogeintrag anhand der ID")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Blog aktualisiert"),
@@ -96,17 +97,15 @@ public class BlogResource {
     })
     public Response updateBlog(@PathParam("id") Long id, @Valid BlogDTO updatedBlogDTO) {
         Blog existingBlog = blogService.getBlogById(id);
-        if (existingBlog != null) {
-            existingBlog.setTitle(updatedBlogDTO.getTitle());
-            existingBlog.setContent(updatedBlogDTO.getContent());
-            blogService.updateBlog(existingBlog);
-            return Response.ok(blogService.mapToBlogDTO(existingBlog)).build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
+        existingBlog.setTitle(updatedBlogDTO.getTitle());
+        existingBlog.setContent(updatedBlogDTO.getContent());
+        blogService.updateBlog(existingBlog);
+        return Response.ok(blogService.mapToBlogDTO(existingBlog)).build();
     }
 
     @PATCH
     @Path("/{id}")
+    @RolesAllowed({"editor", "admin"})  // Nur "editor" und "admin" dürfen Teile eines Blogs aktualisieren
     @Operation(summary = "Teile eines Blogs aktualisieren", description = "Aktualisiert Teile eines Blogeintrags anhand der ID")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Blog aktualisiert"),
@@ -114,37 +113,32 @@ public class BlogResource {
     })
     public Response patchBlog(@PathParam("id") Long id, BlogDTO patchBlogDTO) {
         Blog existingBlog = blogService.getBlogById(id);
-        if (existingBlog != null) {
-            if (patchBlogDTO.getTitle() != null) {
-                existingBlog.setTitle(patchBlogDTO.getTitle());
-            }
-            if (patchBlogDTO.getContent() != null) {
-                existingBlog.setContent(patchBlogDTO.getContent());
-            }
-            blogService.updateBlog(existingBlog);
-            return Response.ok(blogService.mapToBlogDTO(existingBlog)).build();
+        if (patchBlogDTO.getTitle() != null) {
+            existingBlog.setTitle(patchBlogDTO.getTitle());
         }
-        return Response.status(Response.Status.NOT_FOUND).build();
+        if (patchBlogDTO.getContent() != null) {
+            existingBlog.setContent(patchBlogDTO.getContent());
+        }
+        blogService.updateBlog(existingBlog);
+        return Response.ok(blogService.mapToBlogDTO(existingBlog)).build();
     }
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"admin"})  // Nur "admin" darf Blogs löschen
     @Operation(summary = "Lösche einen Blog", description = "Löscht einen Blogeintrag anhand der ID")
     @APIResponses({
         @APIResponse(responseCode = "204", description = "Blog gelöscht"),
         @APIResponse(responseCode = "404", description = "Blog nicht gefunden")
     })
     public Response deleteBlog(@PathParam("id") Long id) {
-        Blog existingBlog = blogService.getBlogById(id);
-        if (existingBlog != null) {
-            blogService.deleteBlog(id);
-            return Response.status(Response.Status.NO_CONTENT).build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
+        blogService.deleteBlog(id);
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @POST
     @Path("/{id}/comments")
+    @RolesAllowed({"user", "editor", "admin"})  // Alle Benutzerrollen dürfen Kommentare hinzufügen
     @Operation(summary = "Einen Kommentar zu einem Blog hinzufügen", description = "Fügt einem Blogeintrag einen neuen Kommentar hinzu")
     @APIResponses({
         @APIResponse(responseCode = "201", description = "Kommentar hinzugefügt"),
@@ -158,6 +152,7 @@ public class BlogResource {
 
     @POST
     @Path("/{id}/likes")
+    @RolesAllowed({"user", "editor", "admin"})  // Alle Benutzerrollen dürfen Likes hinzufügen
     @Operation(summary = "Einen Like zu einem Blog hinzufügen", description = "Fügt einem Blog einen Like hinzu")
     @APIResponses({
         @APIResponse(responseCode = "201", description = "Like hinzugefügt"),
@@ -171,6 +166,7 @@ public class BlogResource {
 
     @DELETE
     @Path("/likes/{likeId}")
+    @RolesAllowed({"user", "editor", "admin"})  // Alle Benutzerrollen dürfen Likes entfernen
     @Operation(summary = "Einen Like von einem Blog entfernen", description = "Entfernt einen Like von einem Blogeintrag")
     @APIResponses({
         @APIResponse(responseCode = "204", description = "Like entfernt"),

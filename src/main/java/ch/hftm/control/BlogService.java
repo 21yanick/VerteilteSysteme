@@ -13,7 +13,7 @@ import ch.hftm.repository.LikeRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.NotFoundException;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -52,7 +52,7 @@ public class BlogService {
             blogRepository.delete(blog);
             Log.info("Blog gelöscht: " + blog.getId() + " mit Titel: " + blog.getTitle());
         } else {
-            Log.warn("Blog nicht gefunden mit ID: " + blogId);
+            throw new NotFoundException("Blog mit ID " + blogId + " nicht gefunden");
         }
     }
 
@@ -62,12 +62,16 @@ public class BlogService {
             blogRepository.getEntityManager().merge(blog);
             Log.info("Blog aktualisiert: " + blog.getTitle());
         } else {
-            Log.warn("Blog nicht gefunden mit ID: " + blog.getId());
+            throw new NotFoundException("Blog mit ID " + blog.getId() + " nicht gefunden");
         }
     }
 
     public Blog getBlogById(Long id) {
-        return blogRepository.findById(id);
+        Blog blog = blogRepository.findById(id);
+        if (blog == null) {
+            throw new NotFoundException("Blog mit ID " + id + " nicht gefunden");
+        }
+        return blog;
     }
 
     public List<Blog> getBlogsByTitle(String title) {
@@ -92,7 +96,7 @@ public class BlogService {
             comment.setBlog(blog);  // Setzt die Beziehung zwischen Kommentar und Blog
             commentRepository.persist(comment);
         } else {
-            throw new WebApplicationException("Blog nicht gefunden", 404);
+            throw new NotFoundException("Blog mit ID " + blogId + " nicht gefunden");
         }
     }
 
@@ -102,7 +106,7 @@ public class BlogService {
         if (comment != null) {
             commentRepository.delete(comment);
         } else {
-            throw new WebApplicationException("Kommentar nicht gefunden", 404);
+            throw new NotFoundException("Kommentar mit ID " + commentId + " nicht gefunden");
         }
     }
 
@@ -113,7 +117,7 @@ public class BlogService {
             like.setBlog(blog); // Verknüpft den Like mit dem Blog
             likeRepository.persist(like);
         } else {
-            throw new WebApplicationException("Blog nicht gefunden", 404);
+            throw new NotFoundException("Blog mit ID " + blogId + " nicht gefunden");
         }
     }
 
@@ -123,7 +127,7 @@ public class BlogService {
         if (like != null) {
             likeRepository.delete(like);
         } else {
-            throw new WebApplicationException("Like nicht gefunden", 404);
+            throw new NotFoundException("Like mit ID " + likeId + " nicht gefunden");
         }
     }
 
@@ -190,14 +194,14 @@ public class BlogService {
     public BlogLike mapToLike(LikeDTO likeDTO) {
         BlogLike like = new BlogLike();
         like.setId(likeDTO.getId());
-        like.setUser(likeDTO.getUser());
+        like.setUsername(likeDTO.getUsername());
         return like;
     }
 
     public LikeDTO mapToLikeDTO(BlogLike like) {
         LikeDTO likeDTO = new LikeDTO();
         likeDTO.setId(like.getId());
-        likeDTO.setUser(like.getUser());
+        likeDTO.setUsername(like.getUsername());
         return likeDTO;
     }
 }

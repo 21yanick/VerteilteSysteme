@@ -1,0 +1,22 @@
+CREATE TABLE Blog (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  content TEXT,
+  title VARCHAR(255),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE BlogLike (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  username VARCHAR(255),
+  blog_id BIGINT,
+  PRIMARY KEY (id),
+  FOREIGN KEY (blog_id) REFERENCES Blog(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE Comment (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  text TEXT,
+  blog_id BIGINT,
+  PRIMARY KEY (id),
+  FOREIGN KEY (blog_id) REFERENCES Blog(id)
+) ENGINE=InnoDB;

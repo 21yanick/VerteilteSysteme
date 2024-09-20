@@ -1,7 +1,7 @@
 package ch.hftm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -12,6 +12,7 @@ import ch.hftm.control.BlogService;
 import ch.hftm.entity.Blog;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
 
 @QuarkusTest
 public class BlogServiceTest {
@@ -24,20 +25,20 @@ public class BlogServiceTest {
         // Arrange
         Blog newBlog = new Blog("Test Blog", "This is a test blog");
         int initialSize = blogService.getBlogs().size();
-    
+
         // Act
         blogService.addBlog(newBlog);
         List<Blog> blogs = blogService.getBlogs();
-    
+
         // Assert
         Blog addedBlog = blogs.stream()
-                              .filter(blog -> blog.getTitle().equals("Test Blog"))
-                              .findFirst()
-                              .orElse(null);
-    
+                .filter(blog -> blog.getTitle().equals("Test Blog"))
+                .findFirst()
+                .orElse(null);
+
         assertEquals(initialSize + 1, blogs.size(), "Blog should be added");
         assertTrue(addedBlog != null, "The new blog should be in the list");
-    }    
+    }
 
     @Test
     void testDeletingBlogs() {
@@ -48,10 +49,13 @@ public class BlogServiceTest {
 
         // Act
         blogService.deleteBlog(blogIdToDelete);
-        Blog foundBlog = blogService.getBlogById(blogIdToDelete);
 
         // Assert
-        assertNull(foundBlog, "The blog should be deleted");
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
+            blogService.getBlogById(blogIdToDelete);
+        });
+
+        assertEquals("Blog mit ID " + blogIdToDelete + " nicht gefunden", exception.getMessage());
     }
 
     @Test
