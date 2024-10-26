@@ -1,18 +1,15 @@
 package ch.hftm;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-
-import org.junit.jupiter.api.Test;
 
 import ch.hftm.control.BlogService;
 import ch.hftm.entity.Blog;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class BlogServiceTest {
@@ -21,7 +18,7 @@ public class BlogServiceTest {
     BlogService blogService;
 
     @Test
-    void testAddingAndGettingBlogs() {
+    public void testAddingAndGettingBlogs() {
         // Arrange
         Blog newBlog = new Blog("Test Blog", "This is a test blog");
         int initialSize = blogService.getBlogs().size();
@@ -37,11 +34,11 @@ public class BlogServiceTest {
                 .orElse(null);
 
         assertEquals(initialSize + 1, blogs.size(), "Blog should be added");
-        assertTrue(addedBlog != null, "The new blog should be in the list");
+        assertNotNull(addedBlog, "The new blog should be in the list");
     }
 
     @Test
-    void testDeletingBlogs() {
+    public void testDeletingBlogs() {
         // Arrange
         Blog blogToDelete = new Blog("Delete Me", "This blog should be deleted");
         blogService.addBlog(blogToDelete);
@@ -59,7 +56,7 @@ public class BlogServiceTest {
     }
 
     @Test
-    void testPagination() {
+    public void testPagination() {
         // Arrange
         Blog blog1 = new Blog("Blog 1", "Content 1");
         Blog blog2 = new Blog("Blog 2", "Content 2");
@@ -73,5 +70,16 @@ public class BlogServiceTest {
         // Assert
         assertEquals(1, firstPage.size(), "First page should return one blog");
         assertEquals(1, secondPage.size(), "Second page should return one blog");
+    }
+
+    @Test
+    public void testGetNonExistingBlog() {
+        // Trying to get a non-existing blog should throw a NotFoundException
+        Long nonExistentBlogId = 9999L;
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
+            blogService.getBlogById(nonExistentBlogId);
+        });
+
+        assertEquals("Blog mit ID " + nonExistentBlogId + " nicht gefunden", exception.getMessage());
     }
 }
