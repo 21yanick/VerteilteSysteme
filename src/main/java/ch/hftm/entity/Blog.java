@@ -13,17 +13,25 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 public class Blog {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    
+    @Id 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull(message = "Titel kann nicht null sein")
     @Size(min = 2, max = 100, message = "Titel muss zwischen 2 und 100 Zeichen haben")
     private String title;
 
-
     @NotNull(message = "Content kann nicht null sein")
     @Size(min = 10, message = "Content muss mindestens 10 Zeichen lang sein")
     private String content;
+
+    /**
+     * Neu: Status-Feld, z.B. PENDING, APPROVED, REJECTED
+     * Falls du in der DB einen Default-Wert 'PENDING' hinterlegst,
+     * kannst du hier optional per Code ebenfalls einen Standard setzen.
+     */
+    private String status;
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -32,11 +40,13 @@ public class Blog {
     private List<BlogLike> likes = new ArrayList<>();
 
     public Blog() {
+        status = "PENDING";
     }
 
     public Blog(String title, String content) {
         this.title = title;
         this.content = content;
+        this.status = "PENDING";
     }
 
     public Long getId() {
@@ -61,6 +71,14 @@ public class Blog {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public List<Comment> getComments() {

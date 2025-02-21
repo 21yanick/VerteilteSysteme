@@ -81,11 +81,25 @@ public class BlogResource {
         @APIResponse(responseCode = "400", description = "Ungültige Eingabedaten")
     })
     public Response createBlog(@Valid BlogDTO blogDTO, @Context UriInfo uriInfo) {
+        // 1) DTO -> Entity
         Blog blog = blogService.mapToBlog(blogDTO);
+
+        // 2) Status setzen (z.B. "PENDING")
+        blog.setStatus("PENDING");
+
+        // 3) Persistieren
         blogService.addBlog(blog);
+
+        // 4) URI erstellen für "Location"-Header
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(Long.toString(blog.getId()));
-        return Response.created(uriBuilder.build()).entity(blogService.mapToBlogDTO(blog)).build();
+
+        // 5) BlogDTO zurückliefern
+        return Response
+                .created(uriBuilder.build())
+                .entity(blogService.mapToBlogDTO(blog))
+                .build();
     }
+
 
     @PUT
     @Path("/{id}")

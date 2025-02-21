@@ -1,7 +1,8 @@
 CREATE TABLE Blog (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  content TEXT,
   title VARCHAR(255),
+  content TEXT,
+  status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
