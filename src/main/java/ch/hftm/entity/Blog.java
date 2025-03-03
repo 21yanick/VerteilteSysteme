@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.validation.constraints.NotNull;
@@ -27,11 +29,11 @@ public class Blog {
     private String content;
 
     /**
-     * Neu: Status-Feld, z.B. PENDING, APPROVED, REJECTED
-     * Falls du in der DB einen Default-Wert 'PENDING' hinterlegst,
-     * kannst du hier optional per Code ebenfalls einen Standard setzen.
+     * Status-Feld, das den aktuellen Validierungsstatus des Blogs speichert
+     * Standard: PENDING
      */
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private BlogStatus status;
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -40,13 +42,13 @@ public class Blog {
     private List<BlogLike> likes = new ArrayList<>();
 
     public Blog() {
-        status = "PENDING";
+        status = BlogStatus.PENDING;
     }
 
     public Blog(String title, String content) {
         this.title = title;
         this.content = content;
-        this.status = "PENDING";
+        this.status = BlogStatus.PENDING;
     }
 
     public Long getId() {
@@ -73,12 +75,30 @@ public class Blog {
         this.content = content;
     }
 
-    public String getStatus() {
+    public BlogStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(BlogStatus status) {
         this.status = status;
+    }
+    
+    /**
+     * Setzt den Status anhand eines String-Werts
+     * Nützlich für REST-Aufrufe und Deserialisierung
+     */
+    public void setStatus(String statusString) {
+        if (statusString == null) {
+            this.status = BlogStatus.PENDING;
+            return;
+        }
+        
+        try {
+            this.status = BlogStatus.valueOf(statusString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // Fallback bei ungültigen Werten
+            this.status = BlogStatus.PENDING;
+        }
     }
 
     public List<Comment> getComments() {
