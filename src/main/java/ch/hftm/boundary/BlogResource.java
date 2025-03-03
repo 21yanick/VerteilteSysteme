@@ -1,6 +1,7 @@
 package ch.hftm.boundary;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import ch.hftm.control.BlogService;
@@ -8,8 +9,10 @@ import ch.hftm.dto.BlogDTO;
 import ch.hftm.dto.CommentDTO;
 import ch.hftm.dto.LikeDTO;
 import ch.hftm.entity.Blog;
+import ch.hftm.entity.BlogStatus;
 import ch.hftm.entity.Comment;
 import ch.hftm.entity.BlogLike;
+import ch.hftm.messaging.BlogValidationService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -24,6 +27,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import io.quarkus.logging.Log;
 
 @Path("/blogs")
 @Produces(MediaType.APPLICATION_JSON)
@@ -33,6 +37,9 @@ public class BlogResource {
 
     @Inject
     BlogService blogService;
+    
+    @Inject
+    BlogValidationService blogValidationService;
 
     @GET
     @Path("/{id}")
@@ -84,20 +91,38 @@ public class BlogResource {
         // 1) DTO -> Entity
         Blog blog = blogService.mapToBlog(blogDTO);
 
-        // 2) Status setzen (z.B. "PENDING")
-        blog.setStatus("PENDING");
+        // 2) Status setzen (PENDING)
+        blog.setStatus(BlogStatus.PENDING);
 
         // 3) Persistieren
         blogService.addBlog(blog);
 
-        // 4) URI erstellen für "Location"-Header
+        // 4) Validierungsanfrage senden (ausserhalb der Transaktion)
+        // WICHTIG: Diese Methode wird nach Abschluss der aktuellen Transaktion aufgerufen,
+        // so dass die Kafka-Nachricht nicht innerhalb der Transaktion gesendet wird
+        sendValidationRequest(blog);
+
+        // 5) URI erstellen für "Location"-Header
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(Long.toString(blog.getId()));
 
-        // 5) BlogDTO zurückliefern
+        // 6) BlogDTO zurückliefern
         return Response
                 .created(uriBuilder.build())
                 .entity(blogService.mapToBlogDTO(blog))
                 .build();
+    }
+    
+    /**
+     * Sendet eine Validierungsanfrage für einen Blog
+     * Diese Methode ist separat, um außerhalb der Transaktion ausgeführt zu werden
+     */
+    private void sendValidationRequest(Blog blog) {
+        try {
+            Log.info("Sende Validierungsanfrage für Blog-ID: " + blog.getId());
+            blogValidationService.sendBlogForValidation(blog);
+        } catch (Exception e) {
+            Log.error("Fehler beim Senden der Validierungsanfrage: " + e.getMessage(), e);
+        }
     }
 
 
@@ -189,5 +214,21 @@ public class BlogResource {
     public Response removeLike(@PathParam("likeId") Long likeId) {
         blogService.removeLikeFromBlog(likeId);
         return Response.status(Response.Status.NO_CONTENT).build();
+    }
+    
+    @GET
+    @Path("/{id}/status")
+    @RolesAllowed({"user", "editor", "admin"})
+    @Operation(summary = "Status eines Blogs abrufen", description = "Gibt den aktuellen Validierungsstatus eines Blogs zurück")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Blog-Status gefunden"),
+        @APIResponse(responseCode = "404", description = "Blog nicht gefunden")
+    })
+    public Response getBlogStatus(@PathParam("id") Long id) {
+        Blog blog = blogService.getBlogById(id);
+        return Response.ok(Map.of(
+            "id", blog.getId(),
+            "status", blog.getStatus()
+        )).build();
     }
 }

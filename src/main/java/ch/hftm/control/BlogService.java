@@ -136,6 +136,11 @@ public class BlogService {
         blog.setId(blogDTO.getId());
         blog.setTitle(blogDTO.getTitle());
         blog.setContent(blogDTO.getContent());
+        
+        // Status übernehmen, falls vorhanden
+        if (blogDTO.getStatus() != null) {
+            blog.setStatus(blogDTO.getStatus());
+        }
 
         // Null Check und Comments
         blog.setComments(blogDTO.getComments() != null 
@@ -159,6 +164,11 @@ public class BlogService {
         blogDTO.setId(blog.getId());
         blogDTO.setTitle(blog.getTitle());
         blogDTO.setContent(blog.getContent());
+        
+        // Status als String setzen (Enums werden als String gespeichert)
+        if (blog.getStatus() != null) {
+            blogDTO.setStatus(blog.getStatus().name());
+        }
 
         // Null Check und Comments
         blogDTO.setComments(blog.getComments() != null 

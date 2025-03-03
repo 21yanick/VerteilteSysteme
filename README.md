@@ -1,16 +1,112 @@
-# Blog Backend Projekt
+# Blog Backend mit Kafka-basierter Text-Validierung
 
-## Überblick
+Dieses Projekt besteht aus drei Modulen:
+1. **Blog-Service**: Hauptanwendung für das Blog-Backend
+2. **Validator-Service**: Separater Service für die Textvalidierung über Kafka
+3. **Shared-Models**: Gemeinsam genutzte Modelle für die Kafka-Kommunikation
 
-Dieses Projekt implementiert ein Blog-Backend, das mit Quarkus entwickelt wurde. Es ermöglicht das Verwalten von Blog-Beiträgen, einschließlich der Erstellung, des Abrufs, der Aktualisierung und der Löschung von Blogs. Benutzer können Kommentare und Likes hinzufügen, um die Interaktion mit Blogposts zu fördern. Das Backend bietet eine RESTful API auf einer skalierbaren Architektur, die durch Keycloak abgesichert ist.
+## Architektur
 
-**Hinweis:** Der Token wird erfolgreich abgerufen, aber es gibt Probleme bei der Verarbeitung des Tokens in der API.
+Die Anwendung nutzt folgende Technologien:
+- Quarkus als Framework
+- MySQL als Datenbank
+- Keycloak für die Authentifizierung
+- Kafka für die asynchrone Kommunikation zwischen den Services
 
-## Aktueller Status
+### Blog-Status-Ablauf
 
-- **Keycloak** ist erfolgreich konfiguriert und generiert Zugriffstokens.
-- **Quarkus API** und die MySQL-Datenbank funktionieren. Datenbankverbindungen sind erfolgreich.
-- **Tokenverarbeitung**: Aktuell wird der Zugriffstoken zwar erfolgreich abgerufen, kann jedoch nicht korrekt von der API verarbeitet werden. Es besteht ein Problem bei der Überprüfung des Tokens durch Quarkus/OIDC.
+1. Wenn ein neuer Blog erstellt wird, erhält er den Status `PENDING`
+2. Der Blog-Service sendet eine Validierungsanfrage an Kafka
+3. Der Validator-Service empfängt die Anfrage und führt die Validierung durch
+4. Das Validierungsergebnis wird über Kafka zurückgesendet
+5. Der Blog-Status wird auf `APPROVED` oder `REJECTED` aktualisiert
+
+## Vorbereitung
+
+### Voraussetzungen
+
+- Java 17+
+- Maven
+- Docker und Docker Compose
+
+## Starten der Anwendung
+
+### Mit Docker Compose
+
+```bash
+# Shared-Models bauen (wichtig!)
+cd shared-models
+mvn clean install
+cd ..
+
+# Blog-Backend bauen
+mvn clean package -DskipTests
+
+# Validator-Service bauen
+cd validator-service
+mvn clean package -DskipTests
+cd ..
+
+# Starten aller Services
+docker-compose up -d
+```
+
+> **Wichtig**: Das Shared-Models-Modul muss zuerst gebaut werden, da es von den anderen Modulen benötigt wird.
+
+Die Services sind dann unter folgenden URLs erreichbar:
+- Blog-Service: http://localhost:8082
+- Validator-Service: http://localhost:8083
+- Keycloak: http://localhost:8080
+- Kafka: localhost:9093
+
+### Entwicklungsmodus
+
+```bash
+# Shared-Models bauen
+cd shared-models
+mvn clean install
+cd ..
+
+# Terminal 1 (Blog-Service)
+mvn quarkus:dev
+
+# Terminal 2 (Validator-Service)
+cd validator-service
+mvn quarkus:dev
+```
+
+Für den Entwicklungsmodus benötigst du lokale Instanzen von Kafka und MySQL. Du kannst diese mit Docker starten:
+
+```bash
+docker-compose up -d kafka zookeeper mysql keycloak
+```
+
+## API-Dokumentation
+
+Die OpenAPI-Dokumentation ist unter http://localhost:8082/swagger-ui verfügbar.
+
+### Blog-Status-API
+
+- `GET /blogs/{id}/status` - Status eines Blogs abfragen
+- Status-Werte:
+  - `PENDING`: Blog wartet auf Validierung
+  - `APPROVED`: Blog wurde validiert und freigegeben
+  - `REJECTED`: Blog wurde validiert und abgelehnt
+
+## Kafka-Kommunikation
+
+Die Services kommunizieren über zwei Kafka-Topics:
+- `blog-validation-requests`: Anfragen zur Textvalidierung
+- `blog-validation-responses`: Antworten mit Validierungsergebnissen
+
+## Entwickler-Informationen
+
+### Validierungsregeln
+
+Der Validator-Service prüft folgende Regeln:
+- Text darf nicht leer sein
+- Text muss mindestens 10 Zeichen lang sein
+- Text darf keine verbotenen Inhalte haben
 
 ## Features
 
@@ -18,202 +114,58 @@ Dieses Projekt implementiert ein Blog-Backend, das mit Quarkus entwickelt wurde.
 - **Kommentar-Verwaltung**: Kommentare zu Blog-Beiträgen hinzufügen.
 - **Likes-Verwaltung**: Benutzer können Blog-Beiträge liken und unliken.
 - **Filterung**: Blog-Beiträge nach Titel filtern.
+- **Asynchrone Textvalidierung**: Blog-Inhalte werden asynchron mittels Kafka validiert und der Status entsprechend aktualisiert.
 
-## Projektstruktur
+## Token von Keycloak holen
 
-- **`pom.xml`**: Maven-Projektdatei, die Abhängigkeiten und Build-Konfiguration definiert.
-- **`src/main/java`**: Enthält die Hauptlogik der Anwendung.
-- **`src/test/java`**: Enthält die Testfälle für die Kernlogik.
-
-## Hauptkomponenten
-
-### BlogResource (REST-Endpunkte)
-Die **REST-Endpunkte** ermöglichen die Verwaltung der Blog-Einträge, einschliesslich Kommentaren und Likes. Hier sind die wichtigsten Endpunkte:
-
-- **GET /blogs**: Abrufen aller Blogs oder Filtern nach Titel (mit optionaler Paginierung).
-- **POST /blogs**: Erstellen eines neuen Blogs.
-- **DELETE /blogs/likes/{likeId}**: Entfernen eines Likes von einem Blog anhand der Like-ID.
-- **GET /blogs/{id}**: Hole einen Blog anhand der ID.
-- **PUT /blogs/{id}**: Aktualisieren eines bestehenden Blogs anhand der ID.
-- **DELETE /blogs/{id}**: Löschen eines Blogs anhand der ID.
-- **PATCH /blogs/{id}**: Teilweises Aktualisieren eines Blogs (z. B. nur Titel oder Inhalt).
-- **POST /blogs/{id}/comments**: Hinzufügen eines Kommentars zu einem Blog.
-- **POST /blogs/{id}/likes**: Hinzufügen eines Likes zu einem Blog.
-
-### BlogService (Geschäftslogik)
-Die **Geschäftslogik** des Blog-Systems ist in der `BlogService`-Klasse implementiert. Sie übernimmt die Verarbeitung der Blog-Daten, einschliesslich CRUD-Operationen (Create, Read, Update, Delete) sowie der Verwaltung von Kommentaren und Likes. Folgende Methoden sind enthalten:
-
-- **getBlogs()**: Gibt eine Liste aller Blogs zurück.
-- **getBlogsByTitle(String title)**: Filtert Blogs nach dem Titel.
-- **addBlog(Blog blog)**: Fügt einen neuen Blog hinzu.
-- **deleteBlog(Long blogId)**: Löscht einen Blog anhand der ID.
-- **updateBlog(Blog blog)**: Aktualisiert einen bestehenden Blog.
-- **addCommentToBlog(Long blogId, Comment comment)**: Fügt einem Blog einen neuen Kommentar hinzu.
-- **addLikeToBlog(Long blogId, BlogLike like)**: Fügt einem Blog einen Like hinzu.
-- **removeLikeFromBlog(Long likeId)**: Entfernt einen Like anhand der Like-ID.
-
-### Blog (Entitätsklasse)
-Die **Blog-Entitätsklasse** repräsentiert das Blog-Modell, das in der Datenbank gespeichert wird. Sie besteht aus den folgenden Attributen und Methoden:
-
-- **id**: Der eindeutige Bezeichner des Blogs.
-- **title**: Der Titel des Blogs (Validierung: zwischen 2 und 100 Zeichen).
-- **content**: Der Inhalt des Blogs (Validierung: mindestens 10 Zeichen).
-- **comments**: Liste der zugeordneten Kommentare.
-- **likes**: Liste der zugeordneten Likes.
-
-**Methoden**:
-
-- **addComment(Comment comment)**: Fügt einen Kommentar hinzu und setzt die Beziehung zwischen Blog und Kommentar.
-- **removeComment(Comment comment)**: Entfernt einen Kommentar und setzt die Beziehung auf `null`.
-- **addLike(BlogLike like)**: Fügt einen Like hinzu und setzt die Beziehung zwischen Blog und Like.
-- **removeLike(BlogLike like)**: Entfernt einen Like und setzt die Beziehung auf `null`.
-
-### BlogLike (Entitätsklasse)
-Die **BlogLike-Entität** repräsentiert die Likes für Blog-Einträge.
-
-- **id**: Der eindeutige Bezeichner des Likes.
-- **user**: Der Benutzername des Nutzers, der den Blog geliked hat.
-- **blog**: Das Blog, dem der Like zugeordnet ist.
-
-**Methoden**:
-
-- **setBlog(Blog blog)**: Setzt die Beziehung zum Blog.
-- **getBlog()**: Gibt das Blog zurück, dem der Like zugeordnet ist.
-
-
-### Comment (Entitätsklasse)
-Die **Comment-Entität** repräsentiert die Kommentare zu den Blog-Einträgen.
-
-- **id**: Der eindeutige Bezeichner des Kommentars.
-- **text**: Der Text des Kommentars (Validierung: zwischen 3 und 500 Zeichen).
-- **blog**: Das Blog, dem der Kommentar zugeordnet ist.
-
-**Methoden**:
-
-- **setBlog(Blog blog)**: Setzt die Beziehung zum Blog.
-- **getBlog()**: Gibt das Blog zurück, dem der Kommentar zugeordnet ist.
-
-## API-Dokumentation
-Die vollständige API-Dokumentation ist über die **Swagger UI** verfügbar, die durch die Integration von **OpenAPI** bereitgestellt wird. Sie bietet eine interaktive Schnittstelle zum Testen und Erkunden der API-Endpunkte.
-
-- **Swagger UI**: [http://localhost:8081/swagger-ui](http://localhost:8081/swagger-ui)
-- **OpenAPI-Spezifikation**: [http://localhost:8081/openapi](http://localhost:8081/openapi)
-
-Die Dokumentation umfasst alle Endpunkte, Parameter, Anfragen und Antworten, einschliesslich Beispielen und Fehlercodes.
-
-Beispiele für Anfragen:
-```bash
-# Abrufen aller Blogs
-curl -X GET "http://localhost:8081/blogs" -H "accept: application/json"
-
-# Hinzufügen eines Kommentars zu einem Blog
-curl -X POST "http://localhost:8081/blogs/1/comments" -H "Content-Type: application/json" -d '{"text":"Grossartiger Beitrag!"}'
-```
-
-**Achtung:** Die Token-Generierung mit Keycloak funktioniert, jedoch gibt es derzeit Probleme bei der Verarbeitung der Tokens durch die API.
-
-## Schritte zur Installation und Ausführung
-
-### 1. **Repository klonen**
-
-Beginne damit, das GitHub-Repository zu klonen:
+Du kannst den Access-Token von Keycloak mit folgendem **curl**-Befehl abrufen:
 
 ```bash
-git clone https://github.com/21yanick/VerteilteSysteme.git
-cd VerteilteSysteme
+curl -X POST http://localhost:8080/realms/blog/protocol/openid-connect/token \
+    -d 'grant_type=password' \
+    -d 'client_id=backend-service' \
+    -d 'username=testuser' \
+    -d 'password=123456' \
+    -d 'client_secret=secret'
 ```
 
-### 2. **MySQL-Datenbank starten**
+> **Hinweis**: Die Keycloak-Konfiguration wird automatisch beim Start geladen. Das System ist bereits mit dem Testuser `testuser` (Passwort: `123456`) vorkonfiguriert, der die `admin`-Rolle besitzt.
 
-Starte die MySQL-Datenbank mit dem folgenden Befehl:
+## Beispielhafte API-Aufrufe
+
+Für einfachere Tests ist im Ordner `private_docs` eine ausführliche Testanleitung (`test_anleitung.md`) mit vorkonfigurierten Testskripten verfügbar.
+
+### 1. **Einen neuen Blog erstellen** (mit Validierung)
 
 ```bash
-docker run \
-  --name blog-mysql \
-  --network blog-nw \
-  -e MYSQL_ROOT_PASSWORD=rootpassword \
-  -e MYSQL_DATABASE=blogdb \
-  -e MYSQL_USER=dbuser \
-  -e MYSQL_PASSWORD=dbuser \
-  -p 3306:3306 \
-  mysql:8.0
+# Token holen
+TOKEN=$(docker exec -i blog-service curl -s -X POST \
+  -d "client_id=backend-service" \
+  -d "username=testuser" \
+  -d "password=123456" \
+  -d "client_secret=secret" \
+  -d "grant_type=password" \
+  http://keycloak:8080/realms/blog/protocol/openid-connect/token | sed -E 's/.*"access_token":"([^"]*).*/\1/')
+
+# Blog erstellen
+docker exec -i blog-service curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"title":"Neuer Blog-Beitrag", "content":"Dies ist ein Beispielinhalt für einen neuen Blog-Beitrag."}' \
+  http://localhost:8081/blogs
 ```
 
-### 3. **Keycloak-Server starten und Realm importieren**
-
-Starte den Keycloak-Server und importiere das Realm aus dem Export-Ordner:
+### 2. **Status eines Blogs abrufen**
 
 ```bash
-docker run \
-  --name blog-keycloak \
-  --network blog-nw \
-  -p 8080:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  -v ${PWD}/export:/opt/keycloak/data/import \
-  quay.io/keycloak/keycloak:latest \
-  start-dev --import-realm
+# Blog-Status prüfen (ersetze <ID> mit der ID des erstellten Blogs)
+docker exec -i blog-service curl -s -X GET \
+  -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8081/blogs/<ID>/status
 ```
 
-### 4. **Quarkus-Anwendung bauen und starten**
+Die Antwort enthält den aktuellen Validierungsstatus (PENDING, APPROVED oder REJECTED).
 
-Baue die Quarkus-Anwendung und starte sie in einem Docker-Container:
+## Weitere Informationen
 
-```bash
-./mvnw clean package
-
-docker build -f src/main/docker/Dockerfile.jvm -t quarkus/blog-backend .
-
-docker run \
-  --name blog-quarkus-app \
-  --network blog-nw \
-  -p 8081:8081 \
-  -e QUARKUS_DATASOURCE_JDBC_URL=jdbc:mysql://blog-mysql:3306/blogdb \
-  -e QUARKUS_DATASOURCE_USERNAME=dbuser \
-  -e QUARKUS_DATASOURCE_PASSWORD=dbuser \
-  -e QUARKUS_HTTP_PORT=8081 \
-  -e QUARKUS_OIDC_AUTH_SERVER_URL=http://blog-keycloak:8080/realms/blog-backend \
-  quarkus/blog-backend
-```
-
-### 5. **Token von Keycloak holen**
-
-Du kannst den Access-Token von Keycloak mit folgendem **HTTPie**-Befehl abrufen:
-
-```bash
-http --form POST http://localhost:8080/realms/blog-backend/protocol/openid-connect/token \
-    grant_type=password \
-    client_id=blog-client \
-    username=testuser \
-    password=123456 \
-    client_secret=dn0uRMYmeN2ID2ieF7FC0nG8ixihDK2W
-```
-
-
-
-### Zugriff auf die Anwendung
-- **API-Endpunkte**: [http://localhost:8080/blogs](http://localhost:8080/blogs)
-- **Quarkus Dev UI**: [http://localhost:8080/q/dev/](http://localhost:8080/q/dev/)
-
-## Aktueller Status
-
-- **Keycloak** ist erfolgreich konfiguriert und generiert Zugriffstokens.
-- **Quarkus API** und die MySQL-Datenbank funktionieren. Datenbankverbindungen sind erfolgreich.
-- **Tokenverarbeitung**: Aktuell wird der Zugriffstoken zwar erfolgreich abgerufen, kann jedoch nicht korrekt von der API verarbeitet werden. Es besteht ein Problem bei der Überprüfung des Tokens durch Quarkus/OIDC.
-
-## Beispielhafte API-Aufrufe (Funktioniert nicht richtig)
-
-### 1. **Abrufen aller Blogs** (mit Token)
-
-```bash
-http GET http://localhost:8081/blogs \
-    Authorization:"Bearer <access_token>"
-```
-
-### 2. **Einen Kommentar zu einem Blog hinzufügen**
-
-```bash
-http POST http://localhost:8081/blogs/1/comments \
-    Authorization:"Bearer <access_token>" \
-    text="Toller Beitrag!"
-```
+Detailliertere Anleitungen und Tests findest du in der Datei `private_docs/test_anleitung.md`.
