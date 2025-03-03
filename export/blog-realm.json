@@ -391,6 +391,25 @@
     "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister" : false,
     "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
     "users" : [ {
+      "id" : "caf4f723-618e-4802-a0ce-b7c2bc7b66a3",
+      "username" : "testuser",
+      "emailVerified" : false,
+      "createdTimestamp" : 1740669133916,
+      "enabled" : true,
+      "totp" : false,
+      "disableableCredentialTypes" : [ ],
+      "requiredActions" : [ ],
+      "notBefore" : 0,
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "WxD+hQCkRsM+e51RUwmpYkGd1UQB5/84xwkTZf9N9V3TdB5BSLbpW8BZ0CHuiEH1G2uYtMfbVt3QH1m0/vjntQ==",
+        "salt" : "AaCeqWGGSQXZLCDTUZ9xdw==",
+        "hashIterations" : 27500,
+        "algorithm" : "pbkdf2-sha256",
+        "temporary" : false
+      } ],
+      "realmRoles" : [ "offline_access", "admin", "uma_authorization", "user", "default-roles-blog" ]
+    }, {
       "id" : "8ba5de7b-786f-4229-87c0-584ae7badda1",
       "createdTimestamp" : 1695400170803,
       "username" : "alice",
@@ -566,7 +585,7 @@
       "enabled" : true,
       "alwaysDisplayInConsole" : false,
       "clientAuthenticatorType" : "client-secret",
-      "secret" : "secret!",
+      "secret" : "secret",
       "redirectUris" : [ "*" ],
       "webOrigins" : [ "*" ],
       "notBefore" : 0,

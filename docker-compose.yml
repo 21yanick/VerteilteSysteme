@@ -47,9 +47,9 @@ services:
         condition: service_healthy
     command: ["start-dev", "--import-realm"]
 
-  quarkus:
+  blog-service:
     image: quarkus/blog-backend-jvm
-    container_name: quarkus
+    container_name: blog-service
     build:
       context: .
       dockerfile: src/main/docker/Dockerfile.jvm
@@ -59,13 +59,32 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: dbuserpassword
       QUARKUS_HTTP_PORT: 8081
       QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/blog
+      MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - '8082:8081'
     networks:
       - blog-network
     depends_on:
       - keycloak
+      - kafka
     command: ["sh", "-c", "sleep 120 && java -jar blog-backend-1.0.0.jar"]
+
+  validator-service:
+    image: quarkus/validator-service-jvm
+    container_name: validator-service
+    build:
+      context: ./validator-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    environment:
+      MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      QUARKUS_HTTP_PORT: 8083
+    ports:
+      - '8083:8083'
+    networks:
+      - blog-network
+    depends_on:
+      - kafka
+    command: ["sh", "-c", "sleep 60 && java -jar validator-service-1.0.0.jar"]
 
   zookeeper:
     image: bitnami/zookeeper:latest
@@ -86,11 +105,13 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,EXTERNAL://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
     ports:
       - "9092:9092"
+      - "9093:9093"
     networks:
       - blog-network
 
