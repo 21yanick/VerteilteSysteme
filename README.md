@@ -165,7 +165,3 @@ docker exec -i blog-service curl -s -X GET \
 ```
 
 Die Antwort enthält den aktuellen Validierungsstatus (PENDING, APPROVED oder REJECTED).
-
-## Weitere Informationen
-
-Detailliertere Anleitungen und Tests findest du in der Datei `private_docs/test_anleitung.md`.
