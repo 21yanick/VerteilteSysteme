@@ -85,28 +85,6 @@ Die Services sind dann unter folgenden URLs erreichbar:
 - Keycloak: http://localhost:8080
 - Kafka: localhost:9093
 
-### Entwicklungsmodus
-
-```bash
-# Shared-Models bauen
-cd shared-models
-mvn clean install
-cd ..
-
-# Terminal 1 (Blog-Service)
-mvn quarkus:dev
-
-# Terminal 2 (Validator-Service)
-cd validator-service
-mvn quarkus:dev
-```
-
-Für den Entwicklungsmodus benötigst du lokale Instanzen von Kafka und MySQL. Du kannst diese mit Docker starten:
-
-```bash
-docker-compose up -d kafka zookeeper mysql keycloak
-```
-
 ## API-Dokumentation
 
 Die OpenAPI-Dokumentation ist unter http://localhost:8082/swagger-ui verfügbar.
@@ -159,8 +137,6 @@ curl -X POST http://localhost:8080/realms/blog/protocol/openid-connect/token \
 
 ## Beispielhafte API-Aufrufe
 
-Für einfachere Tests ist im Ordner `private_docs` eine ausführliche Testanleitung (`test_anleitung.md`) mit vorkonfigurierten Testskripten verfügbar.
-
 ### 1. **Einen neuen Blog erstellen** (mit Validierung)
 
 ```bash
@@ -191,36 +167,3 @@ docker exec -i blog-service curl -s -X GET \
 ```
 
 Die Antwort enthält den aktuellen Validierungsstatus (PENDING, APPROVED oder REJECTED).
-
-### Wie man die GHCR-Images findet
-
-Es gibt mehrere Wege, die Container-Images zu finden:
-
-#### 1. Über die GitHub-Benutzeroberfläche:
-- Besuche das GitHub-Profil: `https://github.com/21yanick`
-- Klicke auf den "Packages" Tab
-- Dort werden die Container-Packages `blog-backend` und `validator-service` aufgelistet
-
-#### 2. Direkter Zugriff über Docker:
-```bash
-# Images direkt von GHCR ziehen
-docker pull ghcr.io/21yanick/blog-backend:latest
-docker pull ghcr.io/21yanick/validator-service:latest
-```
-
-#### 3. Über GHCR-Webseite:
-- `https://github.com/users/21yanick/packages/container/blog-backend`
-- `https://github.com/users/21yanick/packages/container/validator-service`
-
-Diese URLs führen direkt zu den Paketseiten, auf denen auch Versionsinformationen und Pull-Befehle angezeigt werden.
-
----
-
-## Docker-Compose Konfigurationsdateien
-
-Im Repository sind zwei Docker-Compose-Konfigurationsdateien enthalten:
-
-1. **docker-compose.local-build.yml.example**: Für lokale Builds - verwendet die lokal gebauten Docker-Images
-2. **docker-compose.ghcr.yml.example**: Für GHCR-Images - verwendet die vorgefertigten Images von GitHub Container Registry
-
-Je nach Bedarf kann eine der beiden Dateien zu `docker-compose.yml` kopiert oder direkt mit der `-f`-Option verwendet werden.
