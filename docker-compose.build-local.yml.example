@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbuserpassword
+      MYSQL_DATABASE: blogdb
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql-initdb.d:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.5
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: mysql
+      KC_DB_URL_HOST: mysql
+      KC_DB_URL_PORT: 3306
+      KC_DB_DATABASE: keycloak
+      KC_DB_USERNAME: dbuser
+      KC_DB_PASSWORD: dbuserpassword
+      KC_HOSTNAME: keycloak
+      KC_HOSTNAME_STRICT: 'false'
+    volumes:
+      - ./export:/opt/keycloak/data/import
+    ports:
+      - '8080:8080'
+    networks:
+      - blog-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["start-dev", "--import-realm"]
+
+  blog-service:
+    image: quarkus/blog-backend-jvm
+    container_name: blog-service
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:mysql://mysql:3306/blogdb
+      QUARKUS_DATASOURCE_USERNAME: dbuser
+      QUARKUS_DATASOURCE_PASSWORD: dbuserpassword
+      QUARKUS_HTTP_PORT: 8081
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/blog
+      MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - '8082:8081'
+    networks:
+      - blog-network
+    depends_on:
+      - keycloak
+      - kafka
+    command: ["sh", "-c", "sleep 120 && java -jar blog-backend-1.0.0.jar"]
+
+  validator-service:
+    image: quarkus/validator-service-jvm
+    container_name: validator-service
+    build:
+      context: ./validator-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    environment:
+      MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      QUARKUS_HTTP_PORT: 8083
+    ports:
+      - '8083:8083'
+    networks:
+      - blog-network
+    depends_on:
+      - kafka
+    command: ["sh", "-c", "sleep 60 && java -jar validator-service-1.0.0.jar"]
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    networks:
+      - blog-network 
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,EXTERNAL://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    networks:
+      - blog-network
+
+networks:
+  blog-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

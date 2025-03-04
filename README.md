@@ -31,9 +31,35 @@ Die Anwendung nutzt folgende Technologien:
 
 ## Starten der Anwendung
 
-### Mit Docker Compose
+Es gibt zwei Möglichkeiten, die Anwendung zu starten:
+
+### Option 1: Mit fertigen GHCR-Images
+
+Images herunterladen:
+```bash
+# Images direkt von GHCR ziehen
+docker pull ghcr.io/21yanick/blog-backend:latest
+docker pull ghcr.io/21yanick/validator-service:latest
+```
+
+Oder:
+- https://github.com/users/21yanick/packages/container/blog-backend
+- https://github.com/users/21yanick/packages/container/validator-service
+
 
 ```bash
+# Verwendung der GHCR-Images
+cp docker-compose.ghcr.yml.example docker-compose.yml
+docker-compose up -d
+```
+
+Diese Variante verwendet die fertigen Container-Images von GitHub Container Registry und benötigt keinen lokalen Build.
+
+### Option 2: Mit lokalem Build
+
+```bash
+cp docker-compose.local-build.yml.example docker-compose.yml
+
 # Shared-Models bauen (wichtig!)
 cd shared-models
 mvn clean install
@@ -51,7 +77,7 @@ cd ..
 docker-compose up -d
 ```
 
-> **Wichtig**: Das Shared-Models-Modul muss zuerst gebaut werden, da es von den anderen Modulen benötigt wird.
+> **Wichtig**: Bei lokalem Build muss das Shared-Models-Modul zuerst gebaut werden, da es von den anderen Modulen benötigt wird.
 
 Die Services sind dann unter folgenden URLs erreichbar:
 - Blog-Service: http://localhost:8082
@@ -165,3 +191,36 @@ docker exec -i blog-service curl -s -X GET \
 ```
 
 Die Antwort enthält den aktuellen Validierungsstatus (PENDING, APPROVED oder REJECTED).
+
+### Wie man die GHCR-Images findet
+
+Es gibt mehrere Wege, die Container-Images zu finden:
+
+#### 1. Über die GitHub-Benutzeroberfläche:
+- Besuche das GitHub-Profil: `https://github.com/21yanick`
+- Klicke auf den "Packages" Tab
+- Dort werden die Container-Packages `blog-backend` und `validator-service` aufgelistet
+
+#### 2. Direkter Zugriff über Docker:
+```bash
+# Images direkt von GHCR ziehen
+docker pull ghcr.io/21yanick/blog-backend:latest
+docker pull ghcr.io/21yanick/validator-service:latest
+```
+
+#### 3. Über GHCR-Webseite:
+- `https://github.com/users/21yanick/packages/container/blog-backend`
+- `https://github.com/users/21yanick/packages/container/validator-service`
+
+Diese URLs führen direkt zu den Paketseiten, auf denen auch Versionsinformationen und Pull-Befehle angezeigt werden.
+
+---
+
+## Docker-Compose Konfigurationsdateien
+
+Im Repository sind zwei Docker-Compose-Konfigurationsdateien enthalten:
+
+1. **docker-compose.local-build.yml.example**: Für lokale Builds - verwendet die lokal gebauten Docker-Images
+2. **docker-compose.ghcr.yml.example**: Für GHCR-Images - verwendet die vorgefertigten Images von GitHub Container Registry
+
+Je nach Bedarf kann eine der beiden Dateien zu `docker-compose.yml` kopiert oder direkt mit der `-f`-Option verwendet werden.
