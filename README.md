@@ -58,7 +58,7 @@ Diese Variante verwendet die fertigen Container-Images von GitHub Container Regi
 ### Option 2: Mit lokalem Build
 
 ```bash
-cp docker-compose.local-build.yml.example docker-compose.yml
+cp docker-compose.build-local.yml.example docker-compose.yml
 
 # Shared-Models bauen (wichtig!)
 cd shared-models
@@ -120,6 +120,24 @@ Der Validator-Service prüft folgende Regeln:
 - **Filterung**: Blog-Beiträge nach Titel filtern.
 - **Asynchrone Textvalidierung**: Blog-Inhalte werden asynchron mittels Kafka validiert und der Status entsprechend aktualisiert.
 
+## Anmeldung und Authentifizierung
+
+### Verfügbare Benutzer
+
+Das System ist mit folgenden Benutzern vorkonfiguriert:
+
+1. **alice**
+   - Benutzername: `alice`
+   - Passwort: `alice`
+   - Rollen: `admin`, `user`
+
+2. **bob**
+   - Benutzername: `bob`
+   - Passwort: `bob`
+   - Rollen: normale Benutzerrollen
+
+> **Wichtig**: Falls du Probleme mit der Anmeldung hast, starte die Anwendung mit `docker-compose down -v && docker-compose up -d`, um alle Volumes zu löschen und das System neu zu initialisieren.
+
 ## Token von Keycloak holen
 
 Du kannst den Access-Token von Keycloak mit folgendem **curl**-Befehl abrufen:
@@ -128,12 +146,10 @@ Du kannst den Access-Token von Keycloak mit folgendem **curl**-Befehl abrufen:
 curl -X POST http://localhost:8080/realms/blog/protocol/openid-connect/token \
     -d 'grant_type=password' \
     -d 'client_id=backend-service' \
-    -d 'username=testuser' \
-    -d 'password=123456' \
+    -d 'username=alice' \
+    -d 'password=alice' \
     -d 'client_secret=secret'
 ```
-
-> **Hinweis**: Die Keycloak-Konfiguration wird automatisch beim Start geladen. Das System ist bereits mit dem Testuser `testuser` (Passwort: `123456`) vorkonfiguriert, der die `admin`-Rolle besitzt.
 
 ## Beispielhafte API-Aufrufe
 
@@ -143,8 +159,8 @@ curl -X POST http://localhost:8080/realms/blog/protocol/openid-connect/token \
 # Token holen
 TOKEN=$(docker exec -i blog-service curl -s -X POST \
   -d "client_id=backend-service" \
-  -d "username=testuser" \
-  -d "password=123456" \
+  -d "username=alice" \
+  -d "password=alice" \
   -d "client_secret=secret" \
   -d "grant_type=password" \
   http://keycloak:8080/realms/blog/protocol/openid-connect/token | sed -E 's/.*"access_token":"([^"]*).*/\1/')
