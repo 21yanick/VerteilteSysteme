@@ -53,3 +53,7 @@ Thumbbs.db
 
 # Private docs
 private_docs/
+
+# Environment files
+.env
+.env.*
