@@ -1,0 +1,21 @@
+{
+  "templates": {
+    "standard": {
+      "system": "Du bist ein professioneller Blog-Autor, der informative und ansprechende Artikel verfasst. Halte dich an die Anweisungen und erzeuge einen hochwertigen Blogbeitrag, der die angegebenen Parameter berücksichtigt.",
+      "user": "Erstelle einen Blog-Beitrag mit folgendem Titel: \"{title}\". Der Beitrag sollte für eine {audience} Zielgruppe geeignet sein, einen {tone} Ton haben und {length} sein."
+    },
+    "technical": {
+      "system": "Du bist ein technischer Autor, der fundierte und präzise Artikel zu technischen Themen verfasst. Deine Stärke liegt in der klaren Erklärung komplexer Konzepte.",
+      "user": "Erstelle einen technischen Blog-Beitrag mit folgendem Titel: \"{title}\". Der Beitrag sollte technische Details enthalten, aber trotzdem für eine {audience} Zielgruppe verständlich sein. Der Ton sollte {tone} sein und die Länge {length}."
+    },
+    "creative": {
+      "system": "Du bist ein kreativer Autor, der fesselnde und unterhaltsame Blogbeiträge schreibt. Deine Texte sind lebendig, bildreich und wecken das Interesse der Leser.",
+      "user": "Erstelle einen kreativen Blog-Beitrag mit folgendem Titel: \"{title}\". Schreibe für eine {audience} Zielgruppe in einem {tone} Ton. Der Beitrag sollte {length} sein und die Leser von Anfang bis Ende fesseln."
+    }
+  },
+  "parameters": {
+    "audience": ["allgemeine", "technische", "fachspezifische"],
+    "tone": ["informativ", "unterhaltsam", "sachlich", "humorvoll", "kritisch"],
+    "length": ["kurz (ca. 300-500 Wörter)", "mittel (ca. 500-800 Wörter)", "lang (ca. 800-1200 Wörter)"]
+  }
+}

@@ -1,7 +1,7 @@
-# Blog Backend mit Kafka-basierter Text-Validierung
+# Blog Backend mit Kafka-basierter Text-Validierung und KI-Integration
 
 Dieses Projekt besteht aus drei Modulen:
-1. **Blog-Service**: Hauptanwendung für das Blog-Backend
+1. **Blog-Service**: Hauptanwendung für das Blog-Backend mit KI-gestützter Blog-Generierung
 2. **Validator-Service**: Separater Service für die Textvalidierung über Kafka
 3. **Shared-Models**: Gemeinsam genutzte Modelle für die Kafka-Kommunikation
 
@@ -12,6 +12,7 @@ Die Anwendung nutzt folgende Technologien:
 - MySQL als Datenbank
 - Keycloak für die Authentifizierung
 - Kafka für die asynchrone Kommunikation zwischen den Services
+- LangChain4J für die Integration mit KI-Modellen (OpenAI)
 
 ### Blog-Status-Ablauf
 
@@ -119,6 +120,11 @@ Der Validator-Service prüft folgende Regeln:
 - **Likes-Verwaltung**: Benutzer können Blog-Beiträge liken und unliken.
 - **Filterung**: Blog-Beiträge nach Titel filtern.
 - **Asynchrone Textvalidierung**: Blog-Inhalte werden asynchron mittels Kafka validiert und der Status entsprechend aktualisiert.
+- **KI-gestützte Blog-Generierung**: Automatische Erstellung von Blog-Beiträgen mit verschiedenen Parametern:
+  - Verschiedene Arten von Templates (Standard, Technisch, Kreativ)
+  - Konfigurierbare Zielgruppen (allgemein, technisch, fachspezifisch)
+  - Einstellbare Tonalität (informativ, unterhaltsam, sachlich)
+  - Kontrolle über Länge und Umfang der Inhalte
 
 ## Anmeldung und Authentifizierung
 
