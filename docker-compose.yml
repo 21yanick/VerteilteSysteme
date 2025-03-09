@@ -78,9 +78,12 @@ services:
     build:
       context: ./validator-service
       dockerfile: src/main/docker/Dockerfile.jvm
+    env_file:
+      - .env
     environment:
       MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       QUARKUS_HTTP_PORT: 8083
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - '8083:8083'
     networks:
