@@ -16,6 +16,9 @@ public class BlogDTO {
     
     @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "Status des Blog-Posts", example = "PENDING", enumeration = {"PENDING", "APPROVED", "REJECTED"})
     private String status;
+    
+    @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "Grund für die Ablehnung (nur gesetzt, wenn status=REJECTED)", example = "Der Text enthält unangemessene Inhalte")
+    private String rejectionReason;
 
     @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "Liste der Kommentare, die dem Blog zugeordnet sind")
     private List<CommentDTO> comments;
@@ -69,5 +72,13 @@ public class BlogDTO {
     
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+    
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 }

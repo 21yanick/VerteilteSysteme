@@ -46,12 +46,19 @@ public class BlogValidationService {
     @Incoming("validation-response-in")
     @Transactional
     public void processValidationResponse(ValidationResponse response) {
-        Log.info("Validierungsantwort für Blog-ID: " + response.id() + " empfangen, gültig: " + response.valid());
+        Log.info("Validierungsantwort für Blog-ID: " + response.id() + " empfangen, gültig: " + response.valid() + 
+                (response.rejectionReason() != null ? ", Grund: " + response.rejectionReason() : ""));
         
         Blog blog = blogRepository.findById(response.id());
         if (blog != null) {
             BlogStatus newStatus = response.valid() ? BlogStatus.APPROVED : BlogStatus.REJECTED;
             blog.setStatus(newStatus);
+            
+            // Wenn der Blog abgelehnt wurde und ein Grund vorhanden ist, speichere diesen
+            if (!response.valid() && response.rejectionReason() != null) {
+                blog.setRejectionReason(response.rejectionReason());
+                Log.info("Ablehnungsgrund für Blog-ID " + blog.getId() + ": " + response.rejectionReason());
+            }
             
             Log.info("Blog-ID: " + blog.getId() + " Status aktualisiert auf: " + newStatus);
         } else {

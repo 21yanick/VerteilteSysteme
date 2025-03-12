@@ -34,6 +34,11 @@ public class Blog {
      */
     @Enumerated(EnumType.STRING)
     private BlogStatus status;
+    
+    /**
+     * Ablehnungsgrund, wird nur gesetzt, wenn der Blog abgelehnt wurde
+     */
+    private String rejectionReason;
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -81,6 +86,11 @@ public class Blog {
 
     public void setStatus(BlogStatus status) {
         this.status = status;
+        
+        // Wenn der Status auf APPROVED gesetzt wird, Ablehnungsgrund löschen
+        if (status == BlogStatus.APPROVED) {
+            this.rejectionReason = null;
+        }
     }
     
     /**
@@ -137,5 +147,13 @@ public class Blog {
     public void removeLike(BlogLike like) {
         likes.remove(like);
         like.setBlog(null);
+    }
+    
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+    
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 }
