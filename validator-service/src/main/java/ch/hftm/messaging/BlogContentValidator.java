@@ -3,6 +3,7 @@ package ch.hftm.messaging;
 import ch.hftm.messaging.service.ContentModerationService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import io.quarkus.logging.Log;
@@ -29,6 +30,7 @@ public class BlogContentValidator {
     @Incoming("validation-request-in")
     @Outgoing("validation-response-out")
     @Blocking
+    @Transactional
     public ValidationResponse processValidationRequest(ValidationRequest request) {
         Log.info("Verarbeite Validierungsanfrage für Blog-ID: " + request.id());
         

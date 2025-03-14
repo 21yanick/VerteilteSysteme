@@ -3,12 +3,14 @@ package ch.hftm.messaging.service;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * KI-Service zur Moderation von Blog-Inhalten.
  * Prüft Inhalte auf unangemessene Sprache, Qualität und andere Kriterien.
  */
 @RegisterAiService
+@ApplicationScoped
 public interface ContentModerationService {
     
     /**
