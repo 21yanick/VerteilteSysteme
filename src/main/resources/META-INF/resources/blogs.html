@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog-Übersicht</title>
+    <style>
+        :root {
+            --primary: #FFA500;
+            --primary-dark: #FF8C00;
+            --secondary: #2ecc71;
+            --secondary-dark: #27ae60;
+            --text: #333;
+            --light-bg: #f5f5f5;
+            --card-bg: #fff;
+            --border: #ddd;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--light-bg);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        nav a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        nav a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+        
+        .blog-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .blog-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .blog-card h2 {
+            color: var(--primary-dark);
+            margin-top: 0;
+        }
+        
+        .blog-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .blog-meta span {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .blog-meta .status {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .blog-meta .status.approved {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--secondary-dark);
+        }
+        
+        .blog-content {
+            position: relative;
+            max-height: 150px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .blog-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: linear-gradient(transparent, var(--card-bg));
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .token-status {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+        
+        .token-status.invalid {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        .token-status-icon {
+            margin-right: 10px;
+            color: var(--secondary);
+            font-size: 20px;
+        }
+        
+        .token-status.invalid .token-status-icon {
+            color: #e74c3c;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        #loading {
+            text-align: center;
+            padding: 30px;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-button {
+            background-color: var(--light-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-button:hover, .filter-button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .no-blogs {
+            text-align: center;
+            padding: 40px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>Blog-Übersicht</h1>
+        <div>
+            <a href="/">Startseite</a> | 
+            <a href="/blog-generator.html">Blog erstellen</a> | 
+            <a href="/swagger-ui">API-Docs</a>
+        </div>
+    </nav>
+    
+    <div class="token-status" id="tokenStatus">
+        <span class="token-status-icon">⚠️</span>
+        <span>Überprüfe Token-Status...</span>
+    </div>
+    
+    <div class="filters">
+        <button class="filter-button active" data-status="all">Alle Blogs</button>
+        <button class="filter-button" data-status="APPROVED">Veröffentlicht</button>
+        <button class="filter-button" data-status="PENDING">In Prüfung</button>
+        <button class="filter-button" data-status="REJECTED">Abgelehnt</button>
+    </div>
+    
+    <div id="loading">
+        <div class="loading-spinner"></div>
+        <p>Blogs werden geladen...</p>
+    </div>
+    
+    <div id="blogList" class="blog-list"></div>
+    
+    <div id="pagination" class="pagination" style="margin-top: 20px; text-align: center; display: none;">
+        <button id="prevPage" class="button secondary" style="margin-right: 10px;">Vorherige Seite</button>
+        <span id="pageInfo" style="display: inline-block; margin: 0 10px;">Seite 1</span>
+        <button id="nextPage" class="button secondary">Nächste Seite</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const blogList = document.getElementById('blogList');
+            const loading = document.getElementById('loading');
+            const tokenStatus = document.getElementById('tokenStatus');
+            const filterButtons = document.querySelectorAll('.filter-button');
+            
+            let blogs = [];
+            let currentFilter = 'all';
+            let currentPage = 0;
+            let pageSize = 50;
+            
+            // Prüfe Token-Status
+            const checkTokenStatus = () => {
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    tokenStatus.innerHTML = '<span class="token-status-icon">❌</span><span>Kein Token gefunden. <a href="/">Hier anmelden</a></span>';
+                    tokenStatus.classList.add('invalid');
+                    return false;
+                }
+                
+                tokenStatus.innerHTML = '<span class="token-status-icon">✅</span><span>Token gespeichert</span>';
+                tokenStatus.classList.remove('invalid');
+                return true;
+            };
+            
+            // Lade Blogs
+            const loadBlogs = () => {
+                if (!checkTokenStatus()) {
+                    loading.innerHTML = '<p>Bitte melden Sie sich an, um Blogs zu sehen. <a href="/" class="button">Zur Anmeldung</a></p>';
+                    return;
+                }
+                
+                loading.style.display = 'block';
+                blogList.innerHTML = '';
+                
+                fetch(`/blogs?size=${pageSize}&page=${currentPage}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Fehler beim Laden der Blogs: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    blogs = data;
+                    loading.style.display = 'none';
+                    
+                    if (blogs.length === 0 && currentPage === 0) {
+                        blogList.innerHTML = '<div class="no-blogs">Keine Blogs gefunden. <a href="/blog-generator.html" class="button">Erstellen Sie Ihren ersten Blog</a></div>';
+                        pagination.style.display = 'none';
+                        return;
+                    } else if (blogs.length === 0 && currentPage > 0) {
+                        // Wenn keine Blogs auf der aktuellen Seite, gehe zurück zur vorherigen Seite
+                        currentPage--;
+                        loadBlogs();
+                        return;
+                    }
+                    
+                    filterAndRenderBlogs();
+                    updatePagination();
+                })
+                .catch(error => {
+                    loading.innerHTML = `<p>Fehler: ${error.message}</p>
+                                    <p>Bitte überprüfen Sie Ihren Token oder laden Sie die Seite neu.</p>
+                                    <a href="/" class="button">Zur Anmeldung</a>`;
+                });
+            };
+            
+            // Blogs nach Status filtern und anzeigen
+            const filterAndRenderBlogs = () => {
+                blogList.innerHTML = '';
+                
+                const filteredBlogs = currentFilter === 'all' 
+                    ? blogs 
+                    : blogs.filter(blog => blog.status === currentFilter);
+                
+                if (filteredBlogs.length === 0) {
+                    blogList.innerHTML = `<div class="no-blogs">Keine Blogs mit dem Status "${currentFilter}" gefunden.</div>`;
+                    return;
+                }
+                
+                filteredBlogs.forEach(blog => {
+                    const statusClass = blog.status === 'APPROVED' ? 'approved' : '';
+                    
+                    const blogCard = document.createElement('div');
+                    blogCard.className = 'blog-card';
+                    blogCard.innerHTML = `
+                        <h2>${blog.title}</h2>
+                        <div class="blog-meta">
+                            <span class="status ${statusClass}">${blog.status}</span>
+                            <span>ID: ${blog.id}</span>
+                        </div>
+                        <div class="blog-content">${blog.content || 'Kein Inhalt verfügbar'}</div>
+                        ${blog.status === 'REJECTED' && blog.rejectionReason ? 
+                          `<div class="rejection-reason" style="margin: 10px 0; padding: 10px; background-color: rgba(231, 76, 60, 0.1); border-radius: 4px; color: #e74c3c;">
+                             <strong>Ablehnungsgrund:</strong> ${blog.rejectionReason}
+                           </div>` : ''}
+                        <a href="#" class="button view-blog" data-id="${blog.id}">Details anzeigen</a>
+                    `;
+                    
+                    blogList.appendChild(blogCard);
+                });
+                
+                // Event-Listener für Details-Buttons
+                document.querySelectorAll('.view-blog').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const blogId = e.target.getAttribute('data-id');
+                        showBlogDetails(blogId);
+                    });
+                });
+            };
+            
+            // Blog-Details anzeigen
+            const showBlogDetails = (blogId) => {
+                const blog = blogs.find(b => b.id.toString() === blogId.toString());
+                
+                if (!blog) return;
+                
+                // Simple Dialog zum Anzeigen der Details
+                const dialog = document.createElement('div');
+                dialog.style.position = 'fixed';
+                dialog.style.top = '0';
+                dialog.style.left = '0';
+                dialog.style.width = '100%';
+                dialog.style.height = '100%';
+                dialog.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                dialog.style.display = 'flex';
+                dialog.style.justifyContent = 'center';
+                dialog.style.alignItems = 'center';
+                dialog.style.zIndex = '1000';
+                
+                const dialogContent = document.createElement('div');
+                dialogContent.style.backgroundColor = 'white';
+                dialogContent.style.padding = '30px';
+                dialogContent.style.borderRadius = '8px';
+                dialogContent.style.maxWidth = '800px';
+                dialogContent.style.width = '90%';
+                dialogContent.style.maxHeight = '80vh';
+                dialogContent.style.overflow = 'auto';
+                
+                const statusClass = blog.status === 'APPROVED' ? 'approved' : '';
+                
+                dialogContent.innerHTML = `
+                    <h2>${blog.title}</h2>
+                    <div class="blog-meta">
+                        <span class="status ${statusClass}">${blog.status}</span>
+                        <span>ID: ${blog.id}</span>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        ${blog.content || 'Kein Inhalt verfügbar'}
+                    </div>
+                    ${blog.status === 'REJECTED' && blog.rejectionReason ? 
+                    `<div style="margin: 20px 0; padding: 15px; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; color: #e74c3c;">
+                        <strong>Ablehnungsgrund:</strong> ${blog.rejectionReason}
+                    </div>` : ''}
+                    <button class="button close-dialog">Schließen</button>
+                `;
+                
+                dialog.appendChild(dialogContent);
+                document.body.appendChild(dialog);
+                
+                document.querySelector('.close-dialog').addEventListener('click', () => {
+                    document.body.removeChild(dialog);
+                });
+            };
+            
+            // Filter-Buttons
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    currentFilter = button.getAttribute('data-status');
+                    filterAndRenderBlogs();
+                });
+            });
+            
+            // Paginierung einrichten
+            const pagination = document.getElementById('pagination');
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
+            const pageInfo = document.getElementById('pageInfo');
+            
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    pageInfo.textContent = `Seite ${currentPage + 1}`;
+                    loadBlogs();
+                }
+            });
+            
+            nextPageBtn.addEventListener('click', () => {
+                currentPage++;
+                pageInfo.textContent = `Seite ${currentPage + 1}`;
+                loadBlogs();
+            });
+            
+            // Funktion zum Aktualisieren der Paginierung
+            const updatePagination = () => {
+                pagination.style.display = 'block';
+                pageInfo.textContent = `Seite ${currentPage + 1}`;
+                prevPageBtn.disabled = currentPage === 0;
+                
+                // Wenn die aktuelle Anzahl an Blogs kleiner als die Seitengröße ist,
+                // deaktiviere den Nächste-Seite-Button
+                if (blogs.length < pageSize) {
+                    nextPageBtn.disabled = true;
+                } else {
+                    nextPageBtn.disabled = false;
+                }
+            };
+            
+            // Blogs laden
+            loadBlogs();
+        });
+    </script>
+</body>
+</html>
