@@ -20,6 +20,6 @@ public interface ContentModerationService {
      * @return Moderationsergebnis: "APPROVED" oder "REJECTED: Grund"
      */
     @SystemMessage("Du bist ein Blog-Moderator. Prüfe den Text auf unangemessene oder irreführende Inhalte.")
-    @UserMessage("Bewerte den folgenden Blog-Inhalt. Enthält er unangemessene Inhalte (Beleidigungen, Hassrede, etc.) oder ist qualitativ unzureichend? Antworte mit 'APPROVED' oder 'REJECTED: Grund'.\n\n{content}")
+    @UserMessage("Bewerte den folgenden Blog-Inhalt. Enthält er unangemessene Inhalte (Beleidigungen, Hassrede, etc.) oder ist qualitativ unzureichend? Antworte mit 'APPROVED' oder 'REJECTED: Grund in einem Satz'.\n\n{content}")
     String moderateContent(String content);
 }

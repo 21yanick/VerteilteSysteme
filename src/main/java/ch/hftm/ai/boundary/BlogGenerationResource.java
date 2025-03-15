@@ -36,12 +36,30 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Tag(name = "Blog-Generation", description = "KI-gestützte Blog-Generierung")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Transactional
 public class BlogGenerationResource {
     
     /**
-     * Sendet eine Validierungsanfrage für einen Blog
-     * Diese Methode ist separat, um außerhalb der Transaktion ausgeführt zu werden
+     * Erstellt einen neuen Blog und speichert ihn in der Datenbank.
+     * Diese Methode führt die Datenbankoperationen in einer eigenen Transaktion aus.
+     */
+    @Transactional
+    protected Blog createAndStoreBlog(String title, String content) {
+        Blog blog = new Blog();
+        blog.setTitle(title);
+        blog.setContent(content);
+        blog.setStatus(BlogStatus.PENDING); // Setzt den Status auf PENDING für die Validierung
+        
+        // Blog in der Datenbank speichern
+        blogRepository.persist(blog);
+        Log.info("Blog mit ID " + blog.getId() + " in der Datenbank gespeichert");
+        
+        return blog;
+    }
+
+    /**
+     * Sendet eine Validierungsanfrage für einen Blog.
+     * Diese Methode wird außerhalb der Transaktion ausgeführt, um Probleme
+     * mit der Kafka-Kommunikation zu vermeiden.
      */
     private void sendBlogForValidation(Blog blog) {
         try {
@@ -172,16 +190,10 @@ public class BlogGenerationResource {
                     filledTemplate.systemMessage(), 
                     filledTemplate.userMessage());
             
-            // Blog-Entity erstellen und speichern
-            Blog blog = new Blog();
-            blog.setTitle(blogRequest.getTitle());
-            blog.setContent(content);
-            blog.setStatus(BlogStatus.PENDING); // Setzt den Status auf PENDING für die Validierung
+            // Blog-Entity erstellen und speichern (in einer separaten Transaktion)
+            Blog blog = createAndStoreBlog(blogRequest.getTitle(), content);
             
-            // Blog in der Datenbank speichern
-            blogRepository.persist(blog);
-            
-            // Blog zur Validierung senden
+            // Blog zur Validierung senden (außerhalb der Transaktion)
             sendBlogForValidation(blog);
             
             // Erfolgsantwort mit generiertem Blog
