@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KI-Blog-Generator</title>
+    <!-- Marked.js für Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #FFA500;
@@ -190,8 +192,59 @@
             line-height: 1.8;
         }
         
-        #generatedBlog h1, #generatedBlog h2, #generatedBlog h3 {
+        #generatedBlog h1, #generatedBlog h2, #generatedBlog h3, 
+        #generatedBlog h4, #generatedBlog h5, #generatedBlog h6 {
             margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            line-height: 1.25;
+        }
+        
+        #generatedBlog h1 { font-size: 1.8em; }
+        #generatedBlog h2 { font-size: 1.5em; }
+        #generatedBlog h3 { font-size: 1.3em; }
+        
+        #generatedBlog ul, #generatedBlog ol {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+        
+        #generatedBlog li {
+            margin-bottom: 6px;
+        }
+        
+        #generatedBlog a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        #generatedBlog a:hover {
+            text-decoration: underline;
+        }
+        
+        #generatedBlog code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        #generatedBlog pre {
+            background-color: #f0f0f0;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        #generatedBlog blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 16px;
+            margin-left: 0;
+            color: #666;
+        }
+        
+        #generatedBlog img {
+            max-width: 100%;
+            height: auto;
         }
         
         #tokenWarning {
@@ -363,7 +416,7 @@
                                               <p><strong>Schnelltest-Modus</strong></p>
                                               <p><strong>Thema:</strong> ${data.topic || 'KI'}</p>
                                           </div>
-                                          <div id="generatedBlog">${data.content}</div>`;
+                                          <div id="generatedBlog">${marked.parse(data.content)}</div>`;
                     }
                 })
                 .catch(error => {
@@ -435,7 +488,7 @@
                                                <p><strong>Status:</strong> ${data.status || 'PENDING'}</p>
                                            </div>
                                            <hr>
-                                           <div id="generatedBlog">${data.content}</div>`;
+                                           <div id="generatedBlog">${marked.parse(data.content)}</div>`;
                                            
                         // Wenn der Blog eine ID hat, könnte man hier noch einen Link zum Abrufen des Blogs anzeigen
                         if (data.id) {

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog-Übersicht</title>
+    <!-- Marked.js für Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #FFA500;
@@ -114,6 +116,18 @@
             background: linear-gradient(transparent, var(--card-bg));
         }
         
+        /* Für die Detailansicht im Dialog */
+        .blog-content-full {
+            position: relative;
+            max-height: none;
+            overflow: visible;
+            margin-bottom: 10px;
+        }
+        
+        .blog-content-full::after {
+            display: none;
+        }
+        
         .button {
             display: inline-block;
             background-color: var(--primary);
@@ -206,6 +220,55 @@
             border-radius: 8px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.05);
         }
+        
+        /* Markdown-Styling */
+        .blog-content h1, .blog-content h2, .blog-content h3, 
+        .blog-content h4, .blog-content h5, .blog-content h6 {
+            margin-top: 16px;
+            margin-bottom: 8px;
+            line-height: 1.25;
+        }
+        
+        .blog-content h1 { font-size: 1.8em; }
+        .blog-content h2 { font-size: 1.5em; }
+        .blog-content h3 { font-size: 1.3em; }
+        
+        .blog-content ul, .blog-content ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .blog-content li {
+            margin-bottom: 4px;
+        }
+        
+        .blog-content a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .blog-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .blog-content code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .blog-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 16px;
+            margin-left: 0;
+            color: #666;
+        }
+        
+        .blog-content img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -245,6 +308,31 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            if (typeof marked === 'undefined') {
+                console.error("Marked.js ist nicht geladen! Lade es erneut...");
+                const script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+                script.onload = function() {
+                    console.log("Marked.js wurde nachgeladen");
+                    startApp();
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log("Marked.js ist bereits geladen");
+                // Konfiguriere Marked für sicheres Rendering
+                marked.setOptions({
+                    breaks: true,           // Erlaube Zeilenumbrüche
+                    gfm: true,              // GitHub Flavored Markdown erlauben
+                    headerIds: false,       // Keine automatischen IDs für Überschriften
+                    mangle: false,          // Keine Kodierung von E-Mail-Adressen
+                    sanitize: false,        // Sanitization wird durch DOMPurify erledigt
+                    silent: true            // Keine Fehler ins Konsole loggen
+                });
+                startApp();
+            }
+        });
+        
+        function startApp() {
             const blogList = document.getElementById('blogList');
             const loading = document.getElementById('loading');
             const tokenStatus = document.getElementById('tokenStatus');
@@ -334,19 +422,60 @@
                     
                     const blogCard = document.createElement('div');
                     blogCard.className = 'blog-card';
-                    blogCard.innerHTML = `
-                        <h2>${blog.title}</h2>
-                        <div class="blog-meta">
-                            <span class="status ${statusClass}">${blog.status}</span>
-                            <span>ID: ${blog.id}</span>
-                        </div>
-                        <div class="blog-content">${blog.content || 'Kein Inhalt verfügbar'}</div>
-                        ${blog.status === 'REJECTED' && blog.rejectionReason ? 
-                          `<div class="rejection-reason" style="margin: 10px 0; padding: 10px; background-color: rgba(231, 76, 60, 0.1); border-radius: 4px; color: #e74c3c;">
-                             <strong>Ablehnungsgrund:</strong> ${blog.rejectionReason}
-                           </div>` : ''}
-                        <a href="#" class="button view-blog" data-id="${blog.id}">Details anzeigen</a>
+                    const titleEl = document.createElement('h2');
+                    titleEl.textContent = blog.title;
+                    
+                    const metaDiv = document.createElement('div');
+                    metaDiv.className = 'blog-meta';
+                    metaDiv.innerHTML = `
+                        <span class="status ${statusClass}">${blog.status}</span>
+                        <span>ID: ${blog.id}</span>
                     `;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'blog-content';
+                    if (blog.content) {
+                        try {
+                            contentDiv.innerHTML = marked.parse(blog.content);
+                        } catch (error) {
+                            console.error("Markdown parsing error in list:", error);
+                            contentDiv.textContent = blog.content; // Fallback zur rohen Anzeige
+                        }
+                    } else {
+                        contentDiv.textContent = 'Kein Inhalt verfügbar';
+                    }
+                    
+                    const detailsBtn = document.createElement('a');
+                    detailsBtn.href = '#';
+                    detailsBtn.className = 'button view-blog';
+                    detailsBtn.setAttribute('data-id', blog.id);
+                    detailsBtn.textContent = 'Details anzeigen';
+                    
+                    // Füge Elemente zum Blog-Card hinzu
+                    blogCard.appendChild(titleEl);
+                    blogCard.appendChild(metaDiv);
+                    blogCard.appendChild(contentDiv);
+                    
+                    // Füge Ablehnungsgrund hinzu, falls vorhanden
+                    if (blog.status === 'REJECTED' && blog.rejectionReason) {
+                        const rejectionDiv = document.createElement('div');
+                        rejectionDiv.className = 'rejection-reason';
+                        rejectionDiv.style.margin = '10px 0';
+                        rejectionDiv.style.padding = '10px';
+                        rejectionDiv.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+                        rejectionDiv.style.borderRadius = '4px';
+                        rejectionDiv.style.color = '#e74c3c';
+                        
+                        const strongEl = document.createElement('strong');
+                        strongEl.textContent = 'Ablehnungsgrund: ';
+                        
+                        rejectionDiv.appendChild(strongEl);
+                        rejectionDiv.appendChild(document.createTextNode(blog.rejectionReason));
+                        
+                        blogCard.appendChild(rejectionDiv);
+                    }
+                    
+                    blogCard.appendChild(detailsBtn);
                     
                     blogList.appendChild(blogCard);
                 });
@@ -388,24 +517,67 @@
                 dialogContent.style.width = '90%';
                 dialogContent.style.maxHeight = '80vh';
                 dialogContent.style.overflow = 'auto';
+                dialogContent.style.overflowY = 'scroll'; // Immer einen Scrollbalken anzeigen, um Platz für langen Inhalt zu haben
                 
                 const statusClass = blog.status === 'APPROVED' ? 'approved' : '';
                 
-                dialogContent.innerHTML = `
-                    <h2>${blog.title}</h2>
-                    <div class="blog-meta">
-                        <span class="status ${statusClass}">${blog.status}</span>
-                        <span>ID: ${blog.id}</span>
-                    </div>
-                    <div style="margin: 20px 0;">
-                        ${blog.content || 'Kein Inhalt verfügbar'}
-                    </div>
-                    ${blog.status === 'REJECTED' && blog.rejectionReason ? 
-                    `<div style="margin: 20px 0; padding: 15px; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; color: #e74c3c;">
-                        <strong>Ablehnungsgrund:</strong> ${blog.rejectionReason}
-                    </div>` : ''}
-                    <button class="button close-dialog">Schließen</button>
+                // Erstelle Dialog-Komponenten separat
+                const titleEl = document.createElement('h2');
+                titleEl.textContent = blog.title;
+                
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'blog-meta';
+                metaDiv.innerHTML = `
+                    <span class="status ${statusClass}">${blog.status}</span>
+                    <span>ID: ${blog.id}</span>
                 `;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'blog-content-full'; // Verwende die volle Inhaltsklasse für Detailansicht
+                contentDiv.style.margin = '20px 0';
+                if (blog.content) {
+                    try {
+                        console.log("Rendering markdown for:", blog.id);
+                        console.log("Content (first 100 chars):", blog.content.substring(0, 100));
+                        const parsedMarkdown = marked.parse(blog.content);
+                        console.log("Parsed markdown (first 100 chars):", parsedMarkdown.substring(0, 100));
+                        contentDiv.innerHTML = parsedMarkdown;
+                    } catch (error) {
+                        console.error("Markdown parsing error:", error);
+                        contentDiv.textContent = blog.content; // Fallback zur rohen Anzeige
+                    }
+                } else {
+                    contentDiv.textContent = 'Kein Inhalt verfügbar';
+                }
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'button close-dialog';
+                closeBtn.textContent = 'Schließen';
+                
+                // Füge Elemente zum dialogContent hinzu
+                dialogContent.appendChild(titleEl);
+                dialogContent.appendChild(metaDiv);
+                dialogContent.appendChild(contentDiv);
+                
+                // Füge Ablehnungsgrund hinzu, falls vorhanden
+                if (blog.status === 'REJECTED' && blog.rejectionReason) {
+                    const rejectionDiv = document.createElement('div');
+                    rejectionDiv.style.margin = '20px 0';
+                    rejectionDiv.style.padding = '15px';
+                    rejectionDiv.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+                    rejectionDiv.style.borderRadius = '6px';
+                    rejectionDiv.style.color = '#e74c3c';
+                    
+                    const strongEl = document.createElement('strong');
+                    strongEl.textContent = 'Ablehnungsgrund: ';
+                    
+                    rejectionDiv.appendChild(strongEl);
+                    rejectionDiv.appendChild(document.createTextNode(blog.rejectionReason));
+                    
+                    dialogContent.appendChild(rejectionDiv);
+                }
+                
+                dialogContent.appendChild(closeBtn);
                 
                 dialog.appendChild(dialogContent);
                 document.body.appendChild(dialog);
@@ -463,7 +635,7 @@
             
             // Blogs laden
             loadBlogs();
-        });
+        }
     </script>
 </body>
 </html>
