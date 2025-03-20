@@ -169,6 +169,11 @@ public class BlogService {
         if (blog.getStatus() != null) {
             blogDTO.setStatus(blog.getStatus().name());
         }
+        
+        // Ablehnungsgrund immer setzen, wenn vorhanden
+        if (blog.getRejectionReason() != null) {
+            blogDTO.setRejectionReason(blog.getRejectionReason());
+        }
 
         // Null Check und Comments
         blogDTO.setComments(blog.getComments() != null 

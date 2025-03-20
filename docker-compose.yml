@@ -53,13 +53,17 @@ services:
     build:
       context: .
       dockerfile: src/main/docker/Dockerfile.jvm
+    env_file:
+      - .env
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:mysql://mysql:3306/blogdb
-      QUARKUS_DATASOURCE_USERNAME: dbuser
-      QUARKUS_DATASOURCE_PASSWORD: dbuserpassword
       QUARKUS_HTTP_PORT: 8081
       QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/blog
       MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      
+      # Debug-Logging für LangChain4J
+      QUARKUS_LOG_CATEGORY__IO_QUARKIVERSE_LANGCHAIN4J__LEVEL: DEBUG
+      QUARKUS_LOG_LEVEL: DEBUG
     ports:
       - '8082:8081'
     networks:
@@ -67,7 +71,6 @@ services:
     depends_on:
       - keycloak
       - kafka
-    command: ["sh", "-c", "sleep 120 && java -jar blog-backend-1.0.0.jar"]
 
   validator-service:
     image: quarkus/validator-service-jvm
@@ -75,9 +78,12 @@ services:
     build:
       context: ./validator-service
       dockerfile: src/main/docker/Dockerfile.jvm
+    env_file:
+      - .env
     environment:
       MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       QUARKUS_HTTP_PORT: 8083
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - '8083:8083'
     networks:
